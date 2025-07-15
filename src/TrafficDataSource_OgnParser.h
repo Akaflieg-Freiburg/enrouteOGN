@@ -20,14 +20,14 @@
 
 #pragma once
 
-#include <QString>
-#include <QStringView>
 #include <QGeoCoordinate>
-#include "TrafficFactorAircraftType.h"
-using namespace Qt::Literals::StringLiterals;
+#include <QStringView>
 
-// Forward declaration for the test class
-class TrafficDataSource_OgnTest;
+#include "TrafficFactorAircraftType.h"
+#include "units/Angle.h"
+#include "units/Speed.h"
+
+using namespace Qt::Literals::StringLiterals;
 
 namespace Traffic::Ogn {
 Q_NAMESPACE
@@ -47,27 +47,30 @@ struct OgnMessage;
 * This class is used in the UnitTest. It should not have external dependencies like GlobalObject.
 */
 class TrafficDataSource_OgnParser {
-    friend class TrafficDataSource_OgnTest;
 public:
     static void parseAprsisMessage(OgnMessage& ognMessage);
-    static QString formatLoginString(const QStringView callSign, const QGeoCoordinate& receiveLocation, const unsigned int receiveRadius, const QStringView appName, const QStringView appVersion);
-    static QString formatPositionReport(const QStringView callSign, const QGeoCoordinate& coordinate, double course, double speed, double altitude, Traffic::AircraftType aircraftType);
-    static QString formatFilterCommand(const QGeoCoordinate& receiveLocation, const unsigned int receiveRadius);
+    static QString formatLoginString(QStringView callSign,
+                                     const QGeoCoordinate &receiveLocation,
+                                     unsigned int receiveRadius,
+                                     QStringView appName,
+                                     QStringView appVersion);
+    static QString formatPositionReport(QStringView callSign,
+                                        const QGeoCoordinate &coordinate,
+                                        double course,
+                                        double speed,
+                                        double altitude,
+                                        Traffic::AircraftType aircraftType);
 
 private:
-    static QString formatFilter(const QGeoCoordinate& receiveLocation, const unsigned int receiveRadius);
+    static QString formatFilter(const QGeoCoordinate &receiveLocation, unsigned int receiveRadius);
     static QString formatLatitude(double latitude);
     static QString formatLongitude(double longitude);
-    static QString calculatePassword(const QStringView callSign);
-    static double decodeLatitude(const QStringView nmeaLatitude, QChar latitudeDirection);
-    static double decodeLongitude(const QStringView nmeaLongitude, QChar longitudeDirection);
-    static void parseTrafficReport(OgnMessage& ognMessage, const QStringView header, const QStringView body);
+    static QString calculatePassword(QStringView callSign);
+    static double decodeLatitude(QStringView nmeaLatitude, QChar latitudeDirection, QChar latEnhancement);
+    static double decodeLongitude(QStringView nmeaLongitude, QChar longitudeDirection, QChar lonEnhancement);
+    static void parseTrafficReport(OgnMessage &ognMessage, QStringView header, QStringView body);
     static void parseCommentMessage(OgnMessage& ognMessage);
-    static void parseStatusMessage(OgnMessage& ognMessage, const QStringView header, const QStringView body);
-
-    static const QRegularExpression s_regex1;
-    static const QRegularExpression s_regex2;
-    static const QRegularExpression s_regex_weatherreport;
+    static void parseStatusMessage(OgnMessage &ognMessage, QStringView header, QStringView body);
 };
 
 enum class OgnMessageType
@@ -115,8 +118,8 @@ struct OgnMessage
     QGeoCoordinate coordinate; 
     OgnSymbol symbol = OgnSymbol::UNKNOWN; // the symbol that should be shown on the map, typically Aircraft.
 
-    QStringView course;         // course in degrees
-    QStringView speed;          // speed in knots
+    Units::Angle course;        // course
+    Units::Speed speed;         // speed
     QStringView aircraftID;     // aircraft ID, e.g. "id0ADDE626"
     double verticalSpeed = {};  // in m/s
     QStringView rotationRate;   // like "+0.0rot"
@@ -148,8 +151,8 @@ struct OgnMessage
         timestamp.truncate(0);      
         coordinate = QGeoCoordinate();
         symbol = OgnSymbol::UNKNOWN;
-        course.truncate(0);         
-        speed.truncate(0);          
+        course = {};
+        speed = {};
         aircraftID.truncate(0);     
         verticalSpeed = 0.0;
         rotationRate.truncate(0);   
