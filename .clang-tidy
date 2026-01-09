@@ -1,0 +1,27 @@
+---
+# Clang-tidy configuration for enroute project
+# Based on Qt coding standards and best practices
+
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  -misc-include-cleaner,
+  misc-const-correctness,
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: '.*'
+
+CheckOptions:
+  # Const-correctness analysis tuned for Qt:
+  # - AnalyzeValues: Detect local variables that can be const
+  # - AnalyzeReferences: Disabled to avoid noise from Qt APIs
+  # - WarnPointersAsValues: Disabled for Qt's parent-child ownership system
+  - key: misc-const-correctness.AnalyzeValues
+    value: 'true'
+  - key: misc-const-correctness.AnalyzeReferences
+    value: 'false'
+  - key: misc-const-correctness.WarnPointersAsValues
+    value: 'false'
