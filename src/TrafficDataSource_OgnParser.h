@@ -21,17 +21,37 @@
 #pragma once
 
 #include <QGeoCoordinate>
+#include <QObject>
 #include <QStringView>
-
-#include "TrafficFactorAircraftType.h"
-#include "units/Angle.h"
-#include "units/Speed.h"
 
 using namespace Qt::Literals::StringLiterals;
 
 namespace Traffic::Ogn {
 Q_NAMESPACE
 struct OgnMessage;
+
+/*! \brief Aircraft type for OGN messages
+ *
+ *  This enum defines aircraft types used in OGN/APRS messages.
+ *  The list is modeled after the FLARM/NMEA specification.
+ */
+enum class OgnAircraftType
+{
+    unknown = 0,       /*!< Unknown aircraft type */
+    Aircraft,          /*!< Fixed wing aircraft */
+    Airship,           /*!< Airship, such as a zeppelin or a blimp */
+    Balloon,           /*!< Balloon */
+    Copter,            /*!< Helicopter, gyrocopter or rotorcraft */
+    Drone,             /*!< Drone */
+    Glider,            /*!< Glider, including powered gliders and touring motor gliders */
+    HangGlider,        /*!< Hang glider */
+    Jet,               /*!< Jet aircraft */
+    Paraglider,        /*!< Paraglider */
+    Skydiver,          /*!< Skydiver */
+    StaticObstacle,    /*!< Static obstacle */
+    TowPlane           /*!< Tow plane */
+};
+Q_ENUM_NS(OgnAircraftType);
 
 /*! \brief Parser for OGN glidernet.org traffic receiver.
 * 
@@ -59,7 +79,7 @@ public:
                                         double course,
                                         double speed,
                                         double altitude,
-                                        Traffic::AircraftType aircraftType);
+                                        OgnAircraftType aircraftType);
 
 private:
     static QString formatFilter(const QGeoCoordinate &receiveLocation, unsigned int receiveRadius);
@@ -118,8 +138,8 @@ struct OgnMessage
     QGeoCoordinate coordinate; 
     OgnSymbol symbol = OgnSymbol::UNKNOWN; // the symbol that should be shown on the map, typically Aircraft.
 
-    Units::Angle course;        // course
-    Units::Speed speed;         // speed
+    double course = {};         // course in degrees
+    double speed = {};          // speed in knots
     QStringView aircraftID;     // aircraft ID, e.g. "id0ADDE626"
     double verticalSpeed = {};  // in m/s
     QStringView rotationRate;   // like "+0.0rot"
@@ -130,7 +150,7 @@ struct OgnMessage
     QStringView flightlevel;    // like "FL350.00"
     QStringView flightnumber;   // Flight number, e.g., "DLH2AV" or "SRR6119"
     QStringView gpsInfo;        // like "gps:0.0"
-    Traffic::AircraftType aircraftType = Traffic::AircraftType::unknown; // e.g., "Glider", "Tow Plane", etc.
+    OgnAircraftType aircraftType = OgnAircraftType::unknown; // e.g., "Glider", "Tow Plane", etc.
     OgnAddressType addressType = OgnAddressType::UNKNOWN; // e.g., "ICAO", "FLARM", "OGN Tracker"
     QStringView address;        // like "4D21C2"
     bool stealthMode = false;   // true if the aircraft shall be hidden
@@ -151,8 +171,8 @@ struct OgnMessage
         timestamp.truncate(0);      
         coordinate = QGeoCoordinate();
         symbol = OgnSymbol::UNKNOWN;
-        course = {};
-        speed = {};
+        course = 0.0;
+        speed = 0.0;
         aircraftID.truncate(0);     
         verticalSpeed = 0.0;
         rotationRate.truncate(0);   
@@ -163,7 +183,7 @@ struct OgnMessage
         flightlevel.truncate(0);    
         flightnumber.truncate(0);   
         gpsInfo.truncate(0);        
-        aircraftType = Traffic::AircraftType::unknown;
+        aircraftType = OgnAircraftType::unknown;
         addressType = OgnAddressType::UNKNOWN;
         address.truncate(0);        
         stealthMode = false;

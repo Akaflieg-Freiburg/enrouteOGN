@@ -19,13 +19,12 @@
  ***************************************************************************/
 
 #include "TrafficDataSource_OgnParser.h"
-#include "TrafficFactorAircraftType.h"
-#include "units/Distance.h"
-#include "units/Speed.h"
 
 #include <QDebug>
+#include <QDateTime>
 #include <QMetaEnum>
 #include <QRegularExpression>
+#include <QtMath>
 
 #define OGN_DEBUG 1
 
@@ -34,17 +33,17 @@ using namespace Qt::Literals::StringLiterals;
 namespace {
 
 // see http://wiki.glidernet.org/wiki:ogn-flavoured-aprs
-using ATMap = QMap<QString, Traffic::AircraftType>; // Necessary because Q_GLOBAL_STATIC does not like templates
+using ATMap = QMap<QString, Traffic::Ogn::OgnAircraftType>; // Necessary because Q_GLOBAL_STATIC does not like templates
 Q_GLOBAL_STATIC(ATMap, AircraftTypeMap,
                 {
-                    {"/z",  Traffic::AircraftType::unknown},         // Unknown
-                    {"/'",  Traffic::AircraftType::Glider},          // Glider
-                    {"/X",  Traffic::AircraftType::Copter},          // Helicopter
-                    {"/g",  Traffic::AircraftType::Paraglider},      // Parachute, Hang Glider, Paraglider
-                    {"\\^", Traffic::AircraftType::Aircraft},        // Drop Plane, Powered Aircraft
-                    {"/^",  Traffic::AircraftType::Jet},             // Jet Aircraft
-                    {"/O",  Traffic::AircraftType::Balloon},         // Balloon, Airship
-                    {"\\n", Traffic::AircraftType::StaticObstacle},  // Static Object
+                    {"/z",  Traffic::Ogn::OgnAircraftType::unknown},         // Unknown
+                    {"/'",  Traffic::Ogn::OgnAircraftType::Glider},          // Glider
+                    {"/X",  Traffic::Ogn::OgnAircraftType::Copter},          // Helicopter
+                    {"/g",  Traffic::Ogn::OgnAircraftType::Paraglider},      // Parachute, Hang Glider, Paraglider
+                    {"\\^", Traffic::Ogn::OgnAircraftType::Aircraft},        // Drop Plane, Powered Aircraft
+                    {"/^",  Traffic::Ogn::OgnAircraftType::Jet},             // Jet Aircraft
+                    {"/O",  Traffic::Ogn::OgnAircraftType::Balloon},         // Balloon, Airship
+                    {"\\n", Traffic::Ogn::OgnAircraftType::StaticObstacle},  // Static Object
                 });
 
 using ASMap = QMap<QString, Traffic::Ogn::OgnSymbol>; // Necessary because Q_GLOBAL_STATIC does not like templates
@@ -62,25 +61,25 @@ Q_GLOBAL_STATIC(ASMap, AprsSymbolMap,
                 });
 
 // see http://wiki.glidernet.org/wiki:ogn-flavoured-aprs
-using ACMap = QMap<uint32_t, Traffic::AircraftType>;
+using ACMap = QMap<uint32_t, Traffic::Ogn::OgnAircraftType>;
 Q_GLOBAL_STATIC(ACMap, AircraftCategoryMap,
                 {
-                    {0x0, Traffic::AircraftType::unknown},         // Reserved
-                    {0x1, Traffic::AircraftType::Glider},          // Glider/Motor Glider/TMG
-                    {0x2, Traffic::AircraftType::TowPlane},        // Tow Plane/Tug Plane
-                    {0x3, Traffic::AircraftType::Copter},          // Helicopter/Gyrocopter/Rotorcraft
-                    {0x4, Traffic::AircraftType::Skydiver},        // Skydiver/Parachute
-                    {0x5, Traffic::AircraftType::Aircraft},        // Drop Plane for Skydivers
-                    {0x6, Traffic::AircraftType::HangGlider},      // Hang Glider (hard)
-                    {0x7, Traffic::AircraftType::Paraglider},      // Paraglider (soft)
-                    {0x8, Traffic::AircraftType::Aircraft},        // Aircraft with reciprocating engine(s)
-                    {0x9, Traffic::AircraftType::Jet},             // Aircraft with jet/turboprop engine(s)
-                    {0xA, Traffic::AircraftType::unknown},         // Unknown
-                    {0xB, Traffic::AircraftType::Balloon},         // Balloon (hot, gas, weather, static)
-                    {0xC, Traffic::AircraftType::Airship},         // Airship/Blimp/Zeppelin
-                    {0xD, Traffic::AircraftType::Drone},           // UAV/RPAS/Drone
-                    {0xE, Traffic::AircraftType::unknown},         // Reserved
-                    {0xF, Traffic::AircraftType::StaticObstacle}   // Static Obstacle
+                    {0x0, Traffic::Ogn::OgnAircraftType::unknown},         // Reserved
+                    {0x1, Traffic::Ogn::OgnAircraftType::Glider},          // Glider/Motor Glider/TMG
+                    {0x2, Traffic::Ogn::OgnAircraftType::TowPlane},        // Tow Plane/Tug Plane
+                    {0x3, Traffic::Ogn::OgnAircraftType::Copter},          // Helicopter/Gyrocopter/Rotorcraft
+                    {0x4, Traffic::Ogn::OgnAircraftType::Skydiver},        // Skydiver/Parachute
+                    {0x5, Traffic::Ogn::OgnAircraftType::Aircraft},        // Drop Plane for Skydivers
+                    {0x6, Traffic::Ogn::OgnAircraftType::HangGlider},      // Hang Glider (hard)
+                    {0x7, Traffic::Ogn::OgnAircraftType::Paraglider},      // Paraglider (soft)
+                    {0x8, Traffic::Ogn::OgnAircraftType::Aircraft},        // Aircraft with reciprocating engine(s)
+                    {0x9, Traffic::Ogn::OgnAircraftType::Jet},             // Aircraft with jet/turboprop engine(s)
+                    {0xA, Traffic::Ogn::OgnAircraftType::unknown},         // Unknown
+                    {0xB, Traffic::Ogn::OgnAircraftType::Balloon},         // Balloon (hot, gas, weather, static)
+                    {0xC, Traffic::Ogn::OgnAircraftType::Airship},         // Airship/Blimp/Zeppelin
+                    {0xD, Traffic::Ogn::OgnAircraftType::Drone},           // UAV/RPAS/Drone
+                    {0xE, Traffic::Ogn::OgnAircraftType::unknown},         // Reserved
+                    {0xF, Traffic::Ogn::OgnAircraftType::StaticObstacle}   // Static Obstacle
                 });
 
 } // namespace
@@ -354,8 +353,8 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
     } else {
         // Parse course, speed
         if (aprsPart.size() >= 34 && aprsPart.at(30) == u'/') {
-            ognMessage.course = Units::Angle::fromDEG(aprsPart.mid(27, 3).toInt());
-            ognMessage.speed = Units::Speed::fromKN(aprsPart.mid(31, 3).toDouble());
+            ognMessage.course = aprsPart.mid(27, 3).toDouble();  // course in degrees
+            ognMessage.speed = aprsPart.mid(31, 3).toDouble();   // speed in knots
         }
         // Parse altitude
         int altitudeIndex = aprsPart.indexOf(QStringView(u"/A="));
@@ -363,7 +362,8 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
             int altStart = altitudeIndex + 3;
             QStringView altitudeStr = aprsPart.mid(altStart, 6);
             double altitudeFeet = altitudeStr.toDouble();
-            ognMessage.coordinate.setAltitude(Units::Distance::fromFT(altitudeFeet).toM());
+            // Convert feet to meters: 1 foot = 0.3048 meters
+            ognMessage.coordinate.setAltitude(altitudeFeet * 0.3048);
         }
     }
 
@@ -383,7 +383,8 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
             } else if (item.startsWith(u"b")) {
                 ognMessage.pressure = item.mid(1).toDouble() / 10.0; // Convert to hPa
             } else if (item.endsWith(u"fpm")) {
-                ognMessage.verticalSpeed = Units::Speed::fromFPM(item.mid(0, item.indexOf(u'f')).toDouble()).toMPS();
+                // Convert feet per minute to meters per second: 1 fpm = 0.00508 m/s
+                ognMessage.verticalSpeed = item.mid(0, item.indexOf(u'f')).toDouble() * 0.00508;
             } else if (item.endsWith(u"rot")) {
                 ognMessage.rotationRate = item;
             } else if (item.endsWith(u"dB")) {
@@ -418,8 +419,7 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
             ognMessage.stealthMode = hexcode & 0x80000000;
             ognMessage.noTrackingFlag = hexcode & 0x40000000;
             uint32_t aircraftCategory = ((hexcode >> 26) & 0xF);
-            Traffic::AircraftType aircraftTypeEnumValue = AircraftCategoryMap->value(aircraftCategory, Traffic::AircraftType::unknown);
-            ognMessage.aircraftType = aircraftTypeEnumValue;
+            ognMessage.aircraftType = AircraftCategoryMap->value(aircraftCategory, Traffic::Ogn::OgnAircraftType::unknown);
             uint32_t addressTypeValue = (hexcode >> 24) & 0x3;
             ognMessage.addressType = static_cast<OgnAddressType>(addressTypeValue);
             ognMessage.address = QStringView(ognMessage.aircraftID.cbegin()+2, 6);
@@ -428,8 +428,8 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
 
     #if OGN_DEBUG
     qDebug() << "Parsed Traffic Report: " << ognMessage.coordinate.latitude() << " " << ognMessage.coordinate.longitude()
-             << " course:" << ognMessage.course.toDEG() << "° speed:" << ognMessage.speed.toKN() << "kts"
-             << " altitude:" << Units::Distance::fromM(ognMessage.coordinate.altitude()).toFeet() << " wind:" << ognMessage.wind_direction << "/" << ognMessage.wind_speed
+             << " course:" << ognMessage.course << "° speed:" << ognMessage.speed << "kts"
+             << " altitude:" << ognMessage.coordinate.altitude() * 3.28084 << "ft wind:" << ognMessage.wind_direction << "/" << ognMessage.wind_speed
              << " temperature:" << ognMessage.temperature << "°C pressure:" << ognMessage.pressure << "hPa";
     #endif
 }
@@ -451,12 +451,12 @@ QString TrafficDataSource_OgnParser::formatPositionReport(const QStringView call
                                                           double course,
                                                           double speed,
                                                           double altitude,
-                                                          Traffic::AircraftType aircraftType)
+                                                          OgnAircraftType aircraftType)
 {
     // e.g. "ENR12345>APRS,TCPIP*: /074548h5111.32N/00102.04W'086/007/A=000607"
 
     // Static cache for the last lookup
-    static Traffic::AircraftType lastAircraftType = Traffic::AircraftType::unknown;
+    static OgnAircraftType lastAircraftType = OgnAircraftType::unknown;
     static QString lastSymbol = "/z"; // Default to unknown symbol
 
     // Check if the cached value matches the current aircraft type
@@ -483,6 +483,9 @@ QString TrafficDataSource_OgnParser::formatPositionReport(const QStringView call
         lastAircraftType = aircraftType;
     }
 
+    // Convert altitude from meters to feet: 1 meter = 3.28084 feet
+    double altitudeFeet = altitude * 3.28084;
+
     return QString("%1>APRS,TCPIP*: /%2h%3%4%5%6%7/%8/A=%9\n")
         .arg(callSign.toString(),
              QDateTime::currentDateTimeUtc().toString("hhmmss"),
@@ -492,8 +495,7 @@ QString TrafficDataSource_OgnParser::formatPositionReport(const QStringView call
         .arg(lastSymbol[1])                           // Symbol code
         .arg(QString::number(course, 'f', 0).rightJustified(3, '0'),
              QString::number(speed, 'f', 0).rightJustified(3, '0'),
-             QString::number(Units::Distance::fromM(altitude).toFeet(), 'f', 0)
-                 .rightJustified(6, '0')); // Altitude in feet
+             QString::number(altitudeFeet, 'f', 0).rightJustified(6, '0')); // Altitude in feet
 }
 
 QString TrafficDataSource_OgnParser::formatLatitude(double latitude)
