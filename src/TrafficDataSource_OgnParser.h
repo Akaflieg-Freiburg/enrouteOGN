@@ -80,6 +80,7 @@ public:
                                         double speed,
                                         double altitude,
                                         OgnAircraftType aircraftType);
+    static QString formatFilterCommand(const QGeoCoordinate &receiveLocation, unsigned int receiveRadiusKm);
 
 private:
     static QString formatFilter(const QGeoCoordinate &receiveLocation, unsigned int receiveRadius);

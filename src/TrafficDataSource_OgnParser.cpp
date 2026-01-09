@@ -33,7 +33,7 @@
 #include <QtMath>
 #include <QtNumeric>
 
-#define OGN_DEBUG 1
+#define OGNPARSER_DEBUG 0
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -114,7 +114,7 @@ void TrafficDataSource_OgnParser::parseAprsisMessage(OgnMessage& ognMessage)
     auto const colonIndex = sentence.indexOf(u':');
     if (colonIndex == -1)
     {
-#if OGN_DEBUG
+#if OGNPARSER_DEBUG
         qDebug() << "Invalid message format:" << sentence;
 #endif
         ognMessage.type = OgnMessageType::UNKNOWN;
@@ -129,7 +129,7 @@ void TrafficDataSource_OgnParser::parseAprsisMessage(OgnMessage& ognMessage)
     // Check if header and body are valid
     if (header.size() < 5 || body.size() < 5)
     {
-#if OGN_DEBUG
+#if OGNPARSER_DEBUG
         qDebug() << "Invalid message header or body:" << sentence;
 #endif
         ognMessage.type = OgnMessageType::UNKNOWN;
@@ -151,7 +151,7 @@ void TrafficDataSource_OgnParser::parseAprsisMessage(OgnMessage& ognMessage)
     }
 
     ognMessage.type = OgnMessageType::UNKNOWN;
-#if OGN_DEBUG
+#if OGNPARSER_DEBUG
     qDebug() << "Unknown message type:" << sentence;
 #endif
     return;
@@ -244,14 +244,14 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
     // e.g. body = "/074548h5111.32N/00102.04W'086/007/A=000607 id0ADDE626 -019fpm +0.0rot 5.5dB 3e -4.3kHz" (traffic report)
     // e.g. body = "/001140h4741.90N/01104.20E^/A=034868 !W91! id254D21C2 +128fpm FL350.00 A3:AXY547M Sq2244" (traffic report)
     // e.g. body = "/222245h4803.92N/00800.93E_292/005g010t030h00b65526 5.2dB" (weather report, but starting with '/' like a traffic report)
-    #if OGN_DEBUG
+    #if OGNPARSER_DEBUG
     qDebug() << "Traffic Report:" << header << ":" << body;
     #endif
 
     // Check if the body starts with a '/'
     // This is a requirement for the Traffic Report format.
     if(body.at(0) != u'/') {
-        #if OGN_DEBUG
+        #if OGNPARSER_DEBUG
         qDebug() << "Invalid body format in Traffic Report: " << header << ":" << body;
         #endif
         ognMessage.type = OgnMessageType::UNKNOWN;
@@ -261,7 +261,7 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
     // Parse the Header
     auto const index = header.indexOf(u'>');
     if (index == -1) {
-        #if OGN_DEBUG
+        #if OGNPARSER_DEBUG
         qDebug() << "Invalid header format in Traffic Report: " << header << ":" << body;
         #endif
         ognMessage.type = OgnMessageType::UNKNOWN;
@@ -419,7 +419,7 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
         bool ok = false;
         uint32_t const hexcode = ognMessage.aircraftID.toUInt(&ok, 16);
         if (!ok) {
-            #if OGN_DEBUG
+            #if OGNPARSER_DEBUG
             qDebug() << "Failed to parse aircraft ID as hex:" << ognMessage.aircraftID;
             #endif
         } else {
@@ -433,7 +433,7 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
         }
     }
 
-    #if OGN_DEBUG
+    #if OGNPARSER_DEBUG
     qDebug() << "Parsed Traffic Report: " << ognMessage.coordinate.latitude() << " " << ognMessage.coordinate.longitude()
              << " course:" << ognMessage.course << "° speed:" << ognMessage.speed << "kts"
              << " altitude:" << ognMessage.coordinate.altitude() * 3.28084 << "ft wind:" << ognMessage.wind_direction << "/" << ognMessage.wind_speed
@@ -527,6 +527,19 @@ QString TrafficDataSource_OgnParser::formatLongitude(double longitude)
     return QString("%1%2%3")
         .arg(degrees, 3, 10, QChar('0'))
         .arg(QString::number(minutes, 'f', 2).rightJustified(5, '0'), direction);
+}
+
+QString TrafficDataSource_OgnParser::formatFilterCommand(const QGeoCoordinate &receiveLocation, unsigned int receiveRadiusKm)
+{
+    // e.g. "# filter r/-48.0000/7.8512/99 t/o\n"
+    if (!receiveLocation.isValid())
+    {
+        return QString();
+    }
+    return QString("# filter r/%1/%2/%3 t/o\n")
+        .arg(receiveLocation.latitude(), 1, 'f', 4)
+        .arg(receiveLocation.longitude(), 1, 'f', 4)
+        .arg(receiveRadiusKm);
 }
 
 } // namespace Traffic::Ogn
