@@ -70,7 +70,8 @@ class OgnParser {
 public:
     static void parseAprsisMessage(OgnMessage& ognMessage);
     static QString formatLoginString(QStringView callSign,
-                                     const QGeoCoordinate &receiveLocation,
+                                     double latitude,
+                                     double longitude,
                                      unsigned int receiveRadius,
                                      QStringView appName,
                                      QStringView appVersion);
@@ -80,10 +81,10 @@ public:
                                         double speed,
                                         double altitude,
                                         OgnAircraftType aircraftType);
-    static QString formatFilterCommand(const QGeoCoordinate &receiveLocation, unsigned int receiveRadiusKm);
+    static QString formatFilterCommand(double latitude, double longitude, unsigned int receiveRadiusKm);
 
 private:
-    static QString formatFilter(const QGeoCoordinate &receiveLocation, unsigned int receiveRadius);
+    static QString formatFilter(double latitude, double longitude, unsigned int receiveRadius);
     static QString formatLatitude(double latitude);
     static QString formatLongitude(double longitude);
     static QString calculatePassword(QStringView callSign);

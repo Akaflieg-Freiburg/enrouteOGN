@@ -19,12 +19,34 @@ private slots:
     void testParseAprsisMessage_Docu();
     void testParseAprsisMessage_ReceivedDataFile();
     void testParseAprsisMessage_weatherReport();
-    //void testFormatLoginString();
-    //void testFormatFilterCommand();
+    void testFormatLoginString();
+    void testFormatFilterCommand();
     void testFormatPositionReport();
     void testPerformanceOfParseAprsisMessage();
     void testPerformanceOfParseAprsisMessageList();
 };
+
+void TrafficDataSource_OgnTest::testFormatLoginString() {
+    const QStringView callsign = u"ENR12345"_s;
+    const double latitude = -48.0;
+    const double longitude = 7.85123456;
+    const unsigned int receiveRadius = 99;
+    const QStringView swname = u"Enroute"_s;
+    const QStringView swversion = u"1.99"_s;
+
+    const QString loginString = OgnParser::formatLoginString(
+        callsign, latitude, longitude, receiveRadius, swname, swversion);
+
+    QCOMPARE(loginString, "user ENR12345 pass 379 vers Enroute 1.99 filter r/-48.0000/7.8512/99 t/o\n");
+}
+
+void TrafficDataSource_OgnTest::testFormatFilterCommand() {
+    const double latitude = -48.0;
+    const double longitude = 7.85123456;
+    const unsigned int receiveRadius = 99;
+    QString command = OgnParser::formatFilterCommand(latitude, longitude, receiveRadius);
+    QCOMPARE(command, "# filter r/-48.0000/7.8512/99 t/o\n");
+}
 
 void TrafficDataSource_OgnTest::testFormatPositionReport() {
     QStringView callSign = u"ENR12345"_s;

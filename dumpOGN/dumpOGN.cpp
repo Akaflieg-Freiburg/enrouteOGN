@@ -68,20 +68,17 @@ private slots:
         // Generate random callsign
         const QString callSign = QString("DMP%1").arg(QRandomGenerator::global()->bounded(100000, 999999));
         
-        // Calculate simple password (sum of callsign characters mod 10000)
-        int sum = 0;
-        for (int i = 0; i < callSign.length() && i < 6; ++i) {
-            sum += callSign.at(i).unicode();
-        }
-        
         // Send login with filter
         m_textStream.setDevice(&m_socket);
-        m_textStream << QString("user %1 pass %2 vers dumpOGN 1.0 filter r/%3/%4/%5 t/o\n")
-                            .arg(callSign)
-                            .arg(sum % 10000)
-                            .arg(m_latitude, 0, 'f', 4)
-                            .arg(m_longitude, 0, 'f', 4)
-                            .arg(m_radius);
+        const QString loginString = Ogn::OgnParser::formatLoginString(
+            callSign,
+            m_latitude,
+            m_longitude,
+            m_radius,
+            u"dumpOGN"_s,
+            u"1.0"_s
+        );
+        m_textStream << loginString;
         m_textStream.flush();
         
         std::cerr << "Logged in as " << callSign.toStdString() 

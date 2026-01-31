@@ -529,16 +529,52 @@ QString OgnParser::formatLongitude(double longitude)
         .arg(QString::number(minutes, 'f', 2).rightJustified(5, '0'), direction);
 }
 
-QString OgnParser::formatFilterCommand(const QGeoCoordinate &receiveLocation, unsigned int receiveRadiusKm)
+QString OgnParser::calculatePassword(QStringView callSign)
+{
+    // APRS-IS passcode calculation: Sum of ASCII values of the first 6 characters of the call sign
+    // e.g. "ENR12345" -> 379
+    int sum = 0;
+    for (int i = 0; i < callSign.length() && i < 6; ++i)
+    {
+        sum += callSign.at(i).unicode();
+    }
+    return QString::number(sum % 10000);
+}
+
+QString OgnParser::formatLoginString(QStringView callSign,
+                                      double latitude,
+                                      double longitude,
+                                      unsigned int receiveRadius,
+                                      QStringView appName,
+                                      QStringView appVersion)
+{
+    // e.g. "user ENR12345 pass 379 vers Akaflieg-Freiburg Enroute 1.99 filter r/-48.0000/7.8512/99 t/o\n"
+    QString const password = calculatePassword(callSign);
+    QString const filter = formatFilter(latitude, longitude, receiveRadius);
+    
+    return QString("user %1 pass %2 vers %3 %4 %5\n")
+        .arg(callSign.toString())
+        .arg(password)
+        .arg(appName.toString())
+        .arg(appVersion.toString())
+        .arg(filter);
+}
+
+QString OgnParser::formatFilter(double latitude, double longitude, unsigned int receiveRadius)
+{
+    // e.g. "filter r/-48.0000/7.8512/99 t/o"
+    return QString("filter r/%1/%2/%3 t/o")
+        .arg(latitude, 1, 'f', 4)
+        .arg(longitude, 1, 'f', 4)
+        .arg(receiveRadius);
+}
+
+QString OgnParser::formatFilterCommand(double latitude, double longitude, unsigned int receiveRadiusKm)
 {
     // e.g. "# filter r/-48.0000/7.8512/99 t/o\n"
-    if (!receiveLocation.isValid())
-    {
-        return QString();
-    }
     return QString("# filter r/%1/%2/%3 t/o\n")
-        .arg(receiveLocation.latitude(), 1, 'f', 4)
-        .arg(receiveLocation.longitude(), 1, 'f', 4)
+        .arg(latitude, 1, 'f', 4)
+        .arg(longitude, 1, 'f', 4)
         .arg(receiveRadiusKm);
 }
 
