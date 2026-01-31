@@ -44,3 +44,9 @@ set_target_properties(enrouteOGN PROPERTIES
     VERSION ${PROJECT_VERSION}
     POSITION_INDEPENDENT_CODE ON
 )
+
+# Enable testing
+enable_testing()
+
+# Add tests subdirectory
+add_subdirectory(tests)
