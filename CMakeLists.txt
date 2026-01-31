@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find Qt6 packages
-find_package(Qt6 REQUIRED COMPONENTS Core Positioning)
+find_package(Qt6 REQUIRED COMPONENTS Core Positioning Network)
 
 # Set automoc for Qt
 set(CMAKE_AUTOMOC ON)
@@ -44,6 +44,9 @@ set_target_properties(enrouteOGN PROPERTIES
     VERSION ${PROJECT_VERSION}
     POSITION_INDEPENDENT_CODE ON
 )
+
+# Add dumpOGN subdirectory
+add_subdirectory(dumpOGN)
 
 # Enable testing
 enable_testing()
