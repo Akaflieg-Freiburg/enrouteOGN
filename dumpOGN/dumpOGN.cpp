@@ -66,7 +66,7 @@ private slots:
         std::cerr << "Connected to OGN APRS-IS server" << std::endl;
         
         // Generate random callsign
-        QString callSign = QString("DMP%1").arg(QRandomGenerator::global()->bounded(100000, 999999));
+        const QString callSign = QString("DMP%1").arg(QRandomGenerator::global()->bounded(100000, 999999));
         
         // Calculate simple password (sum of callsign characters mod 10000)
         int sum = 0;
@@ -111,7 +111,7 @@ private slots:
             Traffic::Ogn::TrafficDataSource_OgnParser::parseAprsisMessage(message);
             
             // Format using the configured formatter
-            QString output = m_formatter->format(message);
+            const QString output = m_formatter->format(message);
             if (!output.isEmpty()) {
                 std::cout << output.toStdString() << std::endl;
             }
@@ -131,6 +131,7 @@ private:
 
 int main(int argc, char *argv[])
 {
+    // NOLINTNEXTLINE(misc-const-correctness) - app.exec() requires non-const QCoreApplication
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName("dumpOGN");
     QCoreApplication::setApplicationVersion("1.0");
@@ -140,31 +141,31 @@ int main(int argc, char *argv[])
     parser.addHelpOption();
     parser.addVersionOption();
 
-    QCommandLineOption sbs1Option(QStringList() << "sbs1",
+    const QCommandLineOption sbs1Option(QStringList() << "sbs1",
                                    "Output in SBS-1 BaseStation format (dump1090-compatible)");
     parser.addOption(sbs1Option);
 
-    QCommandLineOption serverOption(QStringList() << "s" << "server",
+    const QCommandLineOption serverOption(QStringList() << "s" << "server",
                                      "OGN APRS-IS server (default: aprs.glidernet.org)",
                                      "hostname", "aprs.glidernet.org");
     parser.addOption(serverOption);
 
-    QCommandLineOption portOption(QStringList() << "p" << "port",
+    const QCommandLineOption portOption(QStringList() << "p" << "port",
                                    "Server port (default: 14580)",
                                    "port", "14580");
     parser.addOption(portOption);
 
-    QCommandLineOption latOption("lat",
+    const QCommandLineOption latOption("lat",
                                   "Latitude for position filter (required)",
                                   "latitude");
     parser.addOption(latOption);
 
-    QCommandLineOption lonOption("lon",
+    const QCommandLineOption lonOption("lon",
                                   "Longitude for position filter (required)",
                                   "longitude");
     parser.addOption(lonOption);
 
-    QCommandLineOption radiusOption("radius",
+    const QCommandLineOption radiusOption("radius",
                                      "Radius for position filter in km (default: 50)",
                                      "km", "50");
     parser.addOption(radiusOption);
@@ -178,12 +179,12 @@ int main(int argc, char *argv[])
         parser.showHelp(1);
     }
 
-    bool sbs1Mode = parser.isSet(sbs1Option);
-    QString server = parser.value(serverOption);
-    quint16 port = parser.value(portOption).toUShort();
-    double latitude = parser.value(latOption).toDouble();
-    double longitude = parser.value(lonOption).toDouble();
-    int radius = parser.value(radiusOption).toInt();
+    const bool sbs1Mode = parser.isSet(sbs1Option);
+    const QString server = parser.value(serverOption);
+    const quint16 port = parser.value(portOption).toUShort();
+    const double latitude = parser.value(latOption).toDouble();
+    const double longitude = parser.value(lonOption).toDouble();
+    const int radius = parser.value(radiusOption).toInt();
 
     // Create formatter based on mode (OGN is default)
     OgnFormatter ognFormatter;

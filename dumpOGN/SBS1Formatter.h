@@ -68,9 +68,9 @@ public:
         }
         
         // Get current timestamp
-        QDateTime now = QDateTime::currentDateTimeUtc();
-        QString dateStr = now.toString("yyyy/MM/dd");
-        QString timeStr = now.toString("HH:mm:ss.zzz");
+        const QDateTime now = QDateTime::currentDateTimeUtc();
+        const QString dateStr = now.toString("yyyy/MM/dd");
+        const QString timeStr = now.toString("HH:mm:ss.zzz");
         
         // Convert ICAO address to 6-character hex (pad with zeros if needed)
         QString icaoHex = QString(message.address).toUpper();
@@ -79,16 +79,16 @@ public:
         }
         
         // Convert altitude from meters to feet
-        int altitudeFeet = static_cast<int>(message.coordinate.altitude() * 3.28084);
+        const int altitudeFeet = static_cast<int>(message.coordinate.altitude() * 3.28084);
         
         // Convert speed from m/s to knots (message.speed is already in knots as double)
-        int speedKnots = static_cast<int>(message.speed);
+        const int speedKnots = static_cast<int>(message.speed);
         
         // Convert course to integer degrees
-        int trackDegrees = static_cast<int>(message.course);
+        const int trackDegrees = static_cast<int>(message.course);
         
         // Convert vertical speed from m/s to feet/min
-        int verticalRateFpm = static_cast<int>(message.verticalSpeed * 196.85);
+        const int verticalRateFpm = static_cast<int>(message.verticalSpeed * 196.85);
         
         // Format callsign (use flightnumber if available)
         QString callsign = QString(message.flightnumber);

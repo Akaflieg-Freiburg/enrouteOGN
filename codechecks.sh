@@ -36,15 +36,43 @@ echo "Using: $("$CLANG_TIDY" --version | head -1)"
 echo "Configuration: .clang-tidy"
 echo
 
-# Check all C++ files in enrouteOGN
-ENROUTE_OGN_FILES=$(find "$SCRIPT_DIR/src" -name "*.cpp" -type f 2>/dev/null || true)
+# Track if any warnings were found
+WARNINGS_FOUND=0
 
-if [ -z "$ENROUTE_OGN_FILES" ]; then
-    echo "No C++ files found in enrouteOGN"
+# Check all C++ files in lib/
+LIB_FILES=$(find "$SCRIPT_DIR/lib" -name "*.cpp" -type f 2>/dev/null || true)
+
+if [ -z "$LIB_FILES" ]; then
+    echo "No C++ files found in lib/"
 else
-    for file in $ENROUTE_OGN_FILES; do
+    echo "--- Checking lib/ ---"
+    for file in $LIB_FILES; do
         echo "Checking: $file"
-        "$CLANG_TIDY" "$file" -p "$BUILD_DIR" || true
+        OUTPUT=$("$CLANG_TIDY" "$file" -p "$BUILD_DIR" --header-filter="^((?!autogen|\.moc).)*$" 2>&1 || true)
+        # Check if there are actual warnings (not just suppressed ones)
+        if echo "$OUTPUT" | grep -q "^.*:[0-9]*:[0-9]*: warning:"; then
+            echo "$OUTPUT"
+            WARNINGS_FOUND=1
+        fi
+        echo
+    done
+fi
+
+# Check all C++ files in dumpOGN/
+DUMPOGN_FILES=$(find "$SCRIPT_DIR/dumpOGN" -name "*.cpp" -type f 2>/dev/null || true)
+
+if [ -z "$DUMPOGN_FILES" ]; then
+    echo "No C++ files found in dumpOGN/"
+else
+    echo "--- Checking dumpOGN/ ---"
+    for file in $DUMPOGN_FILES; do
+        echo "Checking: $file"
+        OUTPUT=$("$CLANG_TIDY" "$file" -p "$BUILD_DIR" --header-filter="^((?!autogen|\.moc).)*$" 2>&1 || true)
+        # Check if there are actual warnings (not just suppressed ones)
+        if echo "$OUTPUT" | grep -q "^.*:[0-9]*:[0-9]*: warning:"; then
+            echo "$OUTPUT"
+            WARNINGS_FOUND=1
+        fi
         echo
     done
 fi
@@ -78,3 +106,12 @@ if [ "$ENROUTE_FILES_FOUND" = true ]; then
 fi
 
 echo "=== Code checks completed ==="
+
+# Exit with appropriate code
+if [ $WARNINGS_FOUND -eq 0 ]; then
+    echo "✓ No warnings found - code quality checks passed!"
+    exit 0
+else
+    echo "✗ Code quality checks failed - please fix the warnings above"
+    exit 1
+fi
