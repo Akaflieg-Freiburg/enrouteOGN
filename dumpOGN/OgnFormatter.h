@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <QString>
+#include <string>
 #include "OutputFormatter.h"
 
 /*! \brief OGN APRS-IS raw format
@@ -31,7 +31,7 @@
 class OgnFormatter : public OutputFormatter
 {
 public:
-    QString format(const Ogn::OgnMessage& message) override
+    std::string format(const Ogn::OgnMessage& message) override
     {
         // Simply return the raw sentence as-is
         return message.sentence;

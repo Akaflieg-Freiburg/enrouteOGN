@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <QString>
+#include <string>
 #include "OgnParser.h"
 
 /*! \brief Base class for output formatters
@@ -37,5 +37,5 @@ public:
      *  \param message The parsed OGN message
      *  \return Formatted string for output, or empty string if message should be skipped
      */
-    virtual QString format(const Ogn::OgnMessage& message) = 0;
+    virtual std::string format(const Ogn::OgnMessage& message) = 0;
 };

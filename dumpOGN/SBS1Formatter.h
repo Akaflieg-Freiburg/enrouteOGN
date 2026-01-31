@@ -20,8 +20,11 @@
 
 #pragma once
 
-#include <QDateTime>
-#include <QString>
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
+#include <cmath>
 #include "OutputFormatter.h"
 
 /*! \brief SBS-1 BaseStation format (dump1090-compatible)
@@ -56,26 +59,36 @@
 class SBS1Formatter : public OutputFormatter
 {
 public:
-    QString format(const Ogn::OgnMessage& message) override
+    std::string format(const Ogn::OgnMessage& message) override
     {
         // SBS-1 is only for traffic reports
         if (message.type != Ogn::OgnMessageType::TRAFFIC_REPORT) {
-            return QString();
+            return std::string();
         }
         
         if (std::isnan(message.latitude) || std::isnan(message.longitude)) {
-            return QString();
+            return std::string();
         }
         
         // Get current timestamp
-        const QDateTime now = QDateTime::currentDateTimeUtc();
-        const QString dateStr = now.toString("yyyy/MM/dd");
-        const QString timeStr = now.toString("HH:mm:ss.zzz");
+        std::time_t now = std::time(nullptr);
+        std::tm* utc_tm = std::gmtime(&now);
+        
+        char dateStr[11];
+        char timeStr[13];
+        std::snprintf(dateStr, sizeof(dateStr), "%04d/%02d/%02d", 
+                     utc_tm->tm_year + 1900, utc_tm->tm_mon + 1, utc_tm->tm_mday);
+        std::snprintf(timeStr, sizeof(timeStr), "%02d:%02d:%02d.000",
+                     utc_tm->tm_hour, utc_tm->tm_min, utc_tm->tm_sec);
         
         // Convert ICAO address to 6-character hex (pad with zeros if needed)
-        QString icaoHex = QString(message.address).toUpper();
+        std::string icaoHex(message.address);
+        // Convert to uppercase
+        for (char& c : icaoHex) {
+            c = std::toupper(static_cast<unsigned char>(c));
+        }
         while (icaoHex.length() < 6) {
-            icaoHex.prepend('0');
+            icaoHex = "0" + icaoHex;
         }
         
         // Convert altitude from meters to feet
@@ -91,24 +104,24 @@ public:
         const int verticalRateFpm = static_cast<int>(message.verticalSpeed * 196.85);
         
         // Format callsign (use flightnumber if available)
-        QString callsign = QString(message.flightnumber);
-        if (callsign.isEmpty()) {
+        std::string callsign(message.flightnumber);
+        if (callsign.empty()) {
             callsign = icaoHex; // Use ICAO as fallback
         }
         
         // Build MSG type 8 (all data) output
-        return QString("MSG,8,111,11111,%1,111111,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,,,,,")
-            .arg(icaoHex)
-            .arg(dateStr)
-            .arg(timeStr)
-            .arg(dateStr)
-            .arg(timeStr)
-            .arg(callsign)
-            .arg(altitudeFeet)
-            .arg(speedKnots)
-            .arg(trackDegrees)
-            .arg(message.latitude, 0, 'f', 6)
-            .arg(message.longitude, 0, 'f', 6)
-            .arg(verticalRateFpm);
+        std::ostringstream oss;
+        oss << "MSG,8,111,11111," << icaoHex << ",111111,"
+            << dateStr << "," << timeStr << ","
+            << dateStr << "," << timeStr << ","
+            << callsign << ","
+            << altitudeFeet << ","
+            << speedKnots << ","
+            << trackDegrees << ","
+            << std::fixed << std::setprecision(6) << message.latitude << ","
+            << std::fixed << std::setprecision(6) << message.longitude << ","
+            << verticalRateFpm << ",,,,,";
+        
+        return oss.str();
     }
 };

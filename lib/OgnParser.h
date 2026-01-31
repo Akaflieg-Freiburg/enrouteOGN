@@ -20,12 +20,11 @@
 
 #pragma once
 
-#include <QString>
-#include <QStringView>
 #include <cmath>
+#include <cstdint>
 #include <limits>
-
-using namespace Qt::Literals::StringLiterals;
+#include <string>
+#include <string_view>
 
 namespace Ogn {
 struct OgnMessage;
@@ -68,31 +67,31 @@ enum class OgnAircraftType
 class OgnParser {
 public:
     static void parseAprsisMessage(OgnMessage& ognMessage);
-    static QString formatLoginString(QStringView callSign,
-                                     double latitude,
-                                     double longitude,
-                                     unsigned int receiveRadius,
-                                     QStringView appName,
-                                     QStringView appVersion);
-    static QString formatPositionReport(QStringView callSign,
-                                        double latitude,
-                                        double longitude,
-                                        double altitude,
-                                        double course,
-                                        double speed,
-                                        OgnAircraftType aircraftType);
-    static QString formatFilterCommand(double latitude, double longitude, unsigned int receiveRadiusKm);
+    static std::string formatLoginString(std::string_view callSign,
+                                         double latitude,
+                                         double longitude,
+                                         unsigned int receiveRadius,
+                                         std::string_view appName,
+                                         std::string_view appVersion);
+    static std::string formatPositionReport(std::string_view callSign,
+                                            double latitude,
+                                            double longitude,
+                                            double altitude,
+                                            double course,
+                                            double speed,
+                                            OgnAircraftType aircraftType);
+    static std::string formatFilterCommand(double latitude, double longitude, unsigned int receiveRadiusKm);
 
 private:
-    static QString formatFilter(double latitude, double longitude, unsigned int receiveRadius);
-    static QString formatLatitude(double latitude);
-    static QString formatLongitude(double longitude);
-    static QString calculatePassword(QStringView callSign);
-    static double decodeLatitude(QStringView nmeaLatitude, QChar latitudeDirection, QChar latEnhancement);
-    static double decodeLongitude(QStringView nmeaLongitude, QChar longitudeDirection, QChar lonEnhancement);
-    static void parseTrafficReport(OgnMessage &ognMessage, QStringView header, QStringView body);
+    static std::string formatFilter(double latitude, double longitude, unsigned int receiveRadius);
+    static std::string formatLatitude(double latitude);
+    static std::string formatLongitude(double longitude);
+    static std::string calculatePassword(std::string_view callSign);
+    static double decodeLatitude(std::string_view nmeaLatitude, char latitudeDirection, char latEnhancement);
+    static double decodeLongitude(std::string_view nmeaLongitude, char longitudeDirection, char lonEnhancement);
+    static void parseTrafficReport(OgnMessage &ognMessage, std::string_view header, std::string_view body);
     static void parseCommentMessage(OgnMessage& ognMessage);
-    static void parseStatusMessage(OgnMessage &ognMessage, QStringView header, QStringView body);
+    static void parseStatusMessage(OgnMessage &ognMessage, std::string_view header, std::string_view body);
 };
 
 enum class OgnMessageType
@@ -129,11 +128,11 @@ enum class OgnSymbol
 
 struct OgnMessage
 {
-    QString sentence;           // e.g. "FLRDDE626>APRS,qAS,EGHL:/074548h5111.32N/00102.04W'086/007/A=000607 id0ADDE626 -019fpm +0.0rot 5.5dB 3e -4.3kHz"
+    std::string sentence;       // e.g. "FLRDDE626>APRS,qAS,EGHL:/074548h5111.32N/00102.04W'086/007/A=000607 id0ADDE626 -019fpm +0.0rot 5.5dB 3e -4.3kHz"
     OgnMessageType type = OgnMessageType::UNKNOWN; // e.g. OgnMessageType::TRAFFIC_REPORT
 
-    QStringView sourceId;       // like ENROUTE12345
-    QStringView timestamp;      // hhmmss
+    std::string_view sourceId;       // like ENROUTE12345
+    std::string_view timestamp;      // hhmmss
     double latitude = std::numeric_limits<double>::quiet_NaN();  // Latitude in degrees (WGS84)
     double longitude = std::numeric_limits<double>::quiet_NaN(); // Longitude in degrees (WGS84)
     double altitude = std::numeric_limits<double>::quiet_NaN();  // Altitude in meters (MSL)
@@ -141,19 +140,19 @@ struct OgnMessage
 
     double course = {};         // course in degrees
     double speed = {};          // speed in knots
-    QStringView aircraftID;     // aircraft ID, e.g. "id0ADDE626"
+    std::string_view aircraftID;     // aircraft ID, e.g. "id0ADDE626"
     double verticalSpeed = {};  // in m/s
-    QStringView rotationRate;   // like "+0.0rot"
-    QStringView signalStrength; // like "5.5dB"
-    QStringView errorCount;     // like "3e"
-    QStringView frequencyOffset;// like "-4.3kHz"
-    QStringView squawk;         // like "sq2244"
-    QStringView flightlevel;    // like "FL350.00"
-    QStringView flightnumber;   // Flight number, e.g., "DLH2AV" or "SRR6119"
-    QStringView gpsInfo;        // like "gps:0.0"
+    std::string_view rotationRate;   // like "+0.0rot"
+    std::string_view signalStrength; // like "5.5dB"
+    std::string_view errorCount;     // like "3e"
+    std::string_view frequencyOffset;// like "-4.3kHz"
+    std::string_view squawk;         // like "sq2244"
+    std::string_view flightlevel;    // like "FL350.00"
+    std::string_view flightnumber;   // Flight number, e.g., "DLH2AV" or "SRR6119"
+    std::string_view gpsInfo;        // like "gps:0.0"
     OgnAircraftType aircraftType = OgnAircraftType::unknown; // e.g., "Glider", "Tow Plane", etc.
     OgnAddressType addressType = OgnAddressType::UNKNOWN; // e.g., "ICAO", "FLARM", "OGN Tracker"
-    QStringView address;        // like "4D21C2"
+    std::string_view address;        // like "4D21C2"
     bool stealthMode = false;   // true if the aircraft shall be hidden
     bool noTrackingFlag = false;// true if the aircraft shall not be tracked
 
@@ -168,27 +167,27 @@ struct OgnMessage
     {
         sentence.clear();
         type = OgnMessageType::UNKNOWN;
-        sourceId.truncate(0);       
-        timestamp.truncate(0);      
+        sourceId = std::string_view();       
+        timestamp = std::string_view();      
         latitude = std::numeric_limits<double>::quiet_NaN();
         longitude = std::numeric_limits<double>::quiet_NaN();
         altitude = std::numeric_limits<double>::quiet_NaN();
         symbol = OgnSymbol::UNKNOWN;
         course = 0.0;
         speed = 0.0;
-        aircraftID.truncate(0);     
+        aircraftID = std::string_view();     
         verticalSpeed = 0.0;
-        rotationRate.truncate(0);   
-        signalStrength.truncate(0); 
-        errorCount.truncate(0);     
-        frequencyOffset.truncate(0);
-        squawk.truncate(0);         
-        flightlevel.truncate(0);    
-        flightnumber.truncate(0);   
-        gpsInfo.truncate(0);        
+        rotationRate = std::string_view();   
+        signalStrength = std::string_view(); 
+        errorCount = std::string_view();     
+        frequencyOffset = std::string_view();
+        squawk = std::string_view();         
+        flightlevel = std::string_view();    
+        flightnumber = std::string_view();   
+        gpsInfo = std::string_view();        
         aircraftType = OgnAircraftType::unknown;
         addressType = OgnAddressType::UNKNOWN;
-        address.truncate(0);        
+        address = std::string_view();        
         stealthMode = false;
         noTrackingFlag = false;
         wind_direction = 0;
