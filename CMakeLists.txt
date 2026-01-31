@@ -14,12 +14,12 @@ set(CMAKE_AUTOMOC ON)
 
 # Source files
 set(SOURCES
-    src/TrafficDataSource_OgnParser.cpp
+    lib/TrafficDataSource_OgnParser.cpp
 )
 
 # Header files
 set(HEADERS
-    src/TrafficDataSource_OgnParser.h
+    lib/TrafficDataSource_OgnParser.h
 )
 
 # Create static library
@@ -28,7 +28,7 @@ add_library(enrouteOGN STATIC ${SOURCES} ${HEADERS})
 # Set include directories
 target_include_directories(enrouteOGN
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib>
         $<INSTALL_INTERFACE:include>
 )
 

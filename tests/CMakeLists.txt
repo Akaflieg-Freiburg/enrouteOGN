@@ -4,14 +4,14 @@ find_package(Qt6 REQUIRED COMPONENTS Core Core5Compat Test Network Location Posi
 # Add the test executable
 add_executable(unittestOgn
     TrafficDataSource_OgnTest.cpp
-    ../src/TrafficDataSource_OgnParser.cpp
+    ../lib/TrafficDataSource_OgnParser.cpp
 )
 
 # Include the source directory to find headers
 target_include_directories(unittestOgn
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../lib
 )
 
 # Link the test executable with the necessary libraries
