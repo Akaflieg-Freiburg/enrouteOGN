@@ -20,14 +20,14 @@
 
 #pragma once
 
-#include <QGeoCoordinate>
-#include <QObject>
+#include <QString>
 #include <QStringView>
+#include <cmath>
+#include <limits>
 
 using namespace Qt::Literals::StringLiterals;
 
 namespace Ogn {
-Q_NAMESPACE
 struct OgnMessage;
 
 /*! \brief Aircraft type for OGN messages
@@ -51,7 +51,6 @@ enum class OgnAircraftType
     StaticObstacle,    /*!< Static obstacle */
     TowPlane           /*!< Tow plane */
 };
-Q_ENUM_NS(OgnAircraftType);
 
 /*! \brief Parser for OGN glidernet.org traffic receiver.
 * 
@@ -76,10 +75,11 @@ public:
                                      QStringView appName,
                                      QStringView appVersion);
     static QString formatPositionReport(QStringView callSign,
-                                        const QGeoCoordinate &coordinate,
+                                        double latitude,
+                                        double longitude,
+                                        double altitude,
                                         double course,
                                         double speed,
-                                        double altitude,
                                         OgnAircraftType aircraftType);
     static QString formatFilterCommand(double latitude, double longitude, unsigned int receiveRadiusKm);
 
@@ -103,7 +103,6 @@ enum class OgnMessageType
     STATUS,
     WEATHER,
 };
-Q_ENUM_NS(OgnMessageType);
 
 // see http://wiki.glidernet.org/wiki:ogn-flavoured-aprs
 enum class OgnAddressType
@@ -113,7 +112,6 @@ enum class OgnAddressType
     FLARM = 2,
     OGN_TRACKER = 3,
 };
-Q_ENUM_NS(OgnAddressType);
 
 enum class OgnSymbol
 { 
@@ -128,7 +126,6 @@ enum class OgnSymbol
     UAV,
     WEATHERSTATION,
 };
-Q_ENUM_NS(OgnSymbol);
 
 struct OgnMessage
 {
@@ -137,7 +134,9 @@ struct OgnMessage
 
     QStringView sourceId;       // like ENROUTE12345
     QStringView timestamp;      // hhmmss
-    QGeoCoordinate coordinate; 
+    double latitude = std::numeric_limits<double>::quiet_NaN();  // Latitude in degrees (WGS84)
+    double longitude = std::numeric_limits<double>::quiet_NaN(); // Longitude in degrees (WGS84)
+    double altitude = std::numeric_limits<double>::quiet_NaN();  // Altitude in meters (MSL)
     OgnSymbol symbol = OgnSymbol::UNKNOWN; // the symbol that should be shown on the map, typically Aircraft.
 
     double course = {};         // course in degrees
@@ -171,7 +170,9 @@ struct OgnMessage
         type = OgnMessageType::UNKNOWN;
         sourceId.truncate(0);       
         timestamp.truncate(0);      
-        coordinate = QGeoCoordinate();
+        latitude = std::numeric_limits<double>::quiet_NaN();
+        longitude = std::numeric_limits<double>::quiet_NaN();
+        altitude = std::numeric_limits<double>::quiet_NaN();
         symbol = OgnSymbol::UNKNOWN;
         course = 0.0;
         speed = 0.0;

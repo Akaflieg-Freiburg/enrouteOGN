@@ -63,7 +63,7 @@ public:
             return QString();
         }
         
-        if (!message.coordinate.isValid()) {
+        if (std::isnan(message.latitude) || std::isnan(message.longitude)) {
             return QString();
         }
         
@@ -79,7 +79,7 @@ public:
         }
         
         // Convert altitude from meters to feet
-        const int altitudeFeet = static_cast<int>(message.coordinate.altitude() * 3.28084);
+        const int altitudeFeet = static_cast<int>(message.altitude * 3.28084);
         
         // Convert speed from m/s to knots (message.speed is already in knots as double)
         const int speedKnots = static_cast<int>(message.speed);
@@ -107,8 +107,8 @@ public:
             .arg(altitudeFeet)
             .arg(speedKnots)
             .arg(trackDegrees)
-            .arg(message.coordinate.latitude(), 0, 'f', 6)
-            .arg(message.coordinate.longitude(), 0, 'f', 6)
+            .arg(message.latitude, 0, 'f', 6)
+            .arg(message.longitude, 0, 'f', 6)
             .arg(verticalRateFpm);
     }
 };

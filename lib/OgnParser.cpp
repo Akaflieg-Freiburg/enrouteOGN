@@ -96,10 +96,6 @@ namespace Ogn {
 
 void OgnParser::parseAprsisMessage(OgnMessage& ognMessage)
 {
-    if(ognMessage.type != OgnMessageType::UNKNOWN)
-    {
-        qDebug() << ognMessage.type;
-    }
     Q_ASSERT(ognMessage.type == OgnMessageType::UNKNOWN); // Expect that data Structure OgnMessage is reset or initialized to default values.
 
     const QStringView sentence(ognMessage.sentence);
@@ -163,7 +159,7 @@ double OgnParser::decodeLatitude(QStringView nmeaLatitude, QChar latitudeDirecti
     // e.g. "5111.32"
     if (nmeaLatitude.size() < 7) {
         qDebug() << "invalid input";
-        return qQNaN(); // Invalid input
+        return std::numeric_limits<double>::quiet_NaN(); // Invalid input
     }
 
     bool ok = false;
@@ -172,14 +168,14 @@ double OgnParser::decodeLatitude(QStringView nmeaLatitude, QChar latitudeDirecti
     double const latitudeDegrees = nmeaLatitude.left(2).toDouble(&ok);
     if (!ok) {
         qDebug() << nmeaLatitude << "decodeLatitude toDouble failed 1" << nmeaLatitude.left(2);
-        return qQNaN();
+        return std::numeric_limits<double>::quiet_NaN();
     }
 
     // Parse minutes (remaining characters after the first 2)
     double const latitudeMinutes = nmeaLatitude.mid(2).toDouble(&ok);
     if (!ok) {
         qDebug() << "decodeLatitude toDouble failed 2";
-        return qQNaN();
+        return std::numeric_limits<double>::quiet_NaN();
     }
 
     // Combine degrees and minutes
@@ -203,7 +199,7 @@ double OgnParser::decodeLongitude(QStringView nmeaLongitude, QChar longitudeDire
     // e.g. "00102.04W"
     if (nmeaLongitude.size() < 8) {
         qDebug() << "lon invalid input";
-        return qQNaN(); // Invalid input
+        return std::numeric_limits<double>::quiet_NaN(); // Invalid input
     }
 
     bool ok = false;
@@ -212,14 +208,14 @@ double OgnParser::decodeLongitude(QStringView nmeaLongitude, QChar longitudeDire
     double const longitudeDegrees = nmeaLongitude.left(3).toDouble(&ok);
     if (!ok) {
         qDebug() << nmeaLongitude << "lon toDouble failed 1" << nmeaLongitude.left(2);
-        return qQNaN();
+        return std::numeric_limits<double>::quiet_NaN();
     }
 
     // Parse minutes (remaining characters after the first 3)
     double const longitudeMinutes = nmeaLongitude.mid(3).toDouble(&ok);
     if (!ok) {
         qDebug() << nmeaLongitude << "lon toDouble failed 2" << nmeaLongitude.left(2);
-        return qQNaN();
+        return std::numeric_limits<double>::quiet_NaN();
     }
 
     // Combine degrees and minutes
@@ -309,8 +305,8 @@ void OgnParser::parseTrafficReport(OgnMessage& ognMessage, const QStringView hea
         // decode
         double const latitude = decodeLatitude(latString, latDirection, latEnhancement);
         double const longitude = decodeLongitude(lonString, lonDirection, lonEnhancement);
-        ognMessage.coordinate.setLatitude(latitude);
-        ognMessage.coordinate.setLongitude(longitude);
+        ognMessage.latitude = latitude;
+        ognMessage.longitude = longitude;
     }
 
 
@@ -370,7 +366,7 @@ void OgnParser::parseTrafficReport(OgnMessage& ognMessage, const QStringView hea
             QStringView const altitudeStr = aprsPart.mid(altStart, 6);
             double const altitudeFeet = altitudeStr.toDouble();
             // Convert feet to meters: 1 foot = 0.3048 meters
-            ognMessage.coordinate.setAltitude(altitudeFeet * 0.3048);
+            ognMessage.altitude = altitudeFeet * 0.3048;
         }
     }
 
@@ -434,9 +430,9 @@ void OgnParser::parseTrafficReport(OgnMessage& ognMessage, const QStringView hea
     }
 
     #if OGNPARSER_DEBUG
-    qDebug() << "Parsed Traffic Report: " << ognMessage.coordinate.latitude() << " " << ognMessage.coordinate.longitude()
+    qDebug() << "Parsed Traffic Report: " << ognMessage.latitude << " " << ognMessage.longitude
              << " course:" << ognMessage.course << "° speed:" << ognMessage.speed << "kts"
-             << " altitude:" << ognMessage.coordinate.altitude() * 3.28084 << "ft wind:" << ognMessage.wind_direction << "/" << ognMessage.wind_speed
+             << " altitude:" << ognMessage.altitude * 3.28084 << "ft wind:" << ognMessage.wind_direction << "/" << ognMessage.wind_speed
              << " temperature:" << ognMessage.temperature << "°C pressure:" << ognMessage.pressure << "hPa";
     #endif
 }
@@ -454,10 +450,11 @@ void OgnParser::parseStatusMessage(OgnMessage &ognMessage,
 }
 
 QString OgnParser::formatPositionReport(const QStringView callSign,
-                                                          const QGeoCoordinate &coordinate,
+                                                          double latitude,
+                                                          double longitude,
+                                                          double altitude,
                                                           double course,
                                                           double speed,
-                                                          double altitude,
                                                           OgnAircraftType aircraftType)
 {
     // e.g. "ENR12345>APRS,TCPIP*: /074548h5111.32N/00102.04W'086/007/A=000607"
@@ -496,9 +493,9 @@ QString OgnParser::formatPositionReport(const QStringView callSign,
     return QString("%1>APRS,TCPIP*: /%2h%3%4%5%6%7/%8/A=%9\n")
         .arg(callSign.toString(),
              QDateTime::currentDateTimeUtc().toString("hhmmss"),
-             formatLatitude(coordinate.latitude()))   // Latitude
+             formatLatitude(latitude))   // Latitude
         .arg(lastSymbol[0])                           // Symbol table
-        .arg(formatLongitude(coordinate.longitude())) // Longitude
+        .arg(formatLongitude(longitude)) // Longitude
         .arg(lastSymbol[1])                           // Symbol code
         .arg(QString::number(course, 'f', 0).rightJustified(3, '0'),
              QString::number(speed, 'f', 0).rightJustified(3, '0'),

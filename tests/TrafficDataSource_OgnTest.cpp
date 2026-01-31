@@ -50,52 +50,53 @@ void TrafficDataSource_OgnTest::testFormatFilterCommand() {
 
 void TrafficDataSource_OgnTest::testFormatPositionReport() {
     QStringView callSign = u"ENR12345"_s;
-    QGeoCoordinate coordinate = {51.1886666667, -1.034, 185};
+    double latitude = 51.1886666667;
+    double longitude = -1.034;
+    double altitude = 185.0136;
     double course = 86.0;
     double speed = 7.0;
-    double altitude = 185.0136;
 
     Ogn::OgnAircraftType aircraftType = Ogn::OgnAircraftType::unknown;
     QString currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     QString positionReport = OgnParser::formatPositionReport(
-        callSign, coordinate, course, speed, altitude, aircraftType);
+        callSign, latitude, longitude, altitude, course, speed, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N/00102.04Wz086/007/A=000607\n");
 
     aircraftType = Ogn::OgnAircraftType::TowPlane;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
-        callSign, coordinate, course, speed, altitude, aircraftType);
+        callSign, latitude, longitude, altitude, course, speed, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N\\00102.04W^086/007/A=000607\n");
 
     aircraftType = Ogn::OgnAircraftType::Glider;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
-        callSign, coordinate, course, speed, altitude, aircraftType);
+        callSign, latitude, longitude, altitude, course, speed, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N/00102.04W'086/007/A=000607\n");
 
     // again to test the caching mechanism
     aircraftType = Ogn::OgnAircraftType::Glider;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
-        callSign, coordinate, course, speed, altitude, aircraftType);
+        callSign, latitude, longitude, altitude, course, speed, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N/00102.04W'086/007/A=000607\n");
 
     aircraftType = Ogn::OgnAircraftType::Aircraft;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
-        callSign, coordinate, course, speed, altitude, aircraftType);
+        callSign, latitude, longitude, altitude, course, speed, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N\\00102.04W^086/007/A=000607\n");
 
     aircraftType = Ogn::OgnAircraftType::Paraglider;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
-        callSign, coordinate, course, speed, altitude, aircraftType);
+        callSign, latitude, longitude, altitude, course, speed, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N/00102.04Wg086/007/A=000607\n");
 
     aircraftType = Ogn::OgnAircraftType::Copter;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
-        callSign, coordinate, course, speed, altitude, aircraftType);
+        callSign, latitude, longitude, altitude, course, speed, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N/00102.04WX086/007/A=000607\n");
 }
 
@@ -147,9 +148,9 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_validTrafficReport1() {
 
     QCOMPARE(message.sentence, sentence);
     QCOMPARE(message.type, OgnMessageType::TRAFFIC_REPORT);
-    QCOMPARE(message.coordinate.latitude(), +51.1886666667);
-    QCOMPARE(message.coordinate.longitude(), -1.034);
-    QCOMPARE(message.coordinate.altitude(), 185.0136);
+    QCOMPARE(message.latitude, +51.1886666667);
+    QCOMPARE(message.longitude, -1.034);
+    QCOMPARE(message.altitude, 185.0136);
     QCOMPARE(message.symbol, OgnSymbol::GLIDER);
     QCOMPARE(message.course, 86.0);
     QCOMPARE(message.speed, 7.0);
@@ -174,10 +175,10 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_validTrafficReport2() {
 
     QCOMPARE(message.sentence, sentence);
     QCOMPARE(message.type, OgnMessageType::TRAFFIC_REPORT);
-    QCOMPARE(message.coordinate.latitude(), +47.6984833333);
-    QCOMPARE_GE(message.coordinate.longitude(), +11.0700166667-0.0001);
-    QCOMPARE_LE(message.coordinate.longitude(), +11.0700166667+0.0001);
-    QCOMPARE(message.coordinate.altitude(), 10627.7664);
+    QCOMPARE(message.latitude, +47.6984833333);
+    QCOMPARE_GE(message.longitude, +11.0700166667-0.0001);
+    QCOMPARE_LE(message.longitude, +11.0700166667+0.0001);
+    QCOMPARE(message.altitude, 10627.7664);
     QCOMPARE(message.course, 124.0);
     QCOMPARE(message.speed, 460.0);
     QCOMPARE(message.aircraftID, "254D21C2");
@@ -202,10 +203,10 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_validTrafficReport3() {
 
     QCOMPARE(message.sentence, sentence);
     QCOMPARE(message.type, OgnMessageType::TRAFFIC_REPORT);
-    QCOMPARE(message.coordinate.latitude(), +47.6984833333);
-    QCOMPARE_GE(message.coordinate.longitude(), +11.0700166667-0.0001);
-    QCOMPARE_LE(message.coordinate.longitude(), +11.0700166667+0.0001);
-    QCOMPARE(message.coordinate.altitude(), 10627.7664);
+    QCOMPARE(message.latitude, +47.6984833333);
+    QCOMPARE_GE(message.longitude, +11.0700166667-0.0001);
+    QCOMPARE_LE(message.longitude, +11.0700166667+0.0001);
+    QCOMPARE(message.altitude, 10627.7664);
     QCOMPARE(message.course, 0.0);
     QCOMPARE(message.speed, 0.0);
     QCOMPARE(message.aircraftID, "254D21C2");
@@ -230,9 +231,9 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_invalidMessage() {
 
     QCOMPARE(message.sentence, sentence);
     QCOMPARE(message.type, OgnMessageType::UNKNOWN);
-    QVERIFY(qIsNaN(message.coordinate.latitude()));
-    QVERIFY(qIsNaN(message.coordinate.longitude()));
-    QVERIFY(qIsNaN(message.coordinate.altitude()));
+    QVERIFY(std::isnan(message.latitude));
+    QVERIFY(std::isnan(message.longitude));
+    QVERIFY(std::isnan(message.altitude));
     QCOMPARE(message.course, 0.0);
     QCOMPARE(message.speed, 0.0);
     QCOMPARE(message.aircraftID, "");
@@ -257,9 +258,9 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_commentMessage() {
 
     QCOMPARE(message.sentence, sentence);
     QCOMPARE(message.type, OgnMessageType::COMMENT);
-    QVERIFY(qIsNaN(message.coordinate.latitude()));
-    QVERIFY(qIsNaN(message.coordinate.longitude()));
-    QVERIFY(qIsNaN(message.coordinate.altitude()));
+    QVERIFY(std::isnan(message.latitude));
+    QVERIFY(std::isnan(message.longitude));
+    QVERIFY(std::isnan(message.altitude));
     QCOMPARE(message.course, 0.0);
     QCOMPARE(message.speed, 0.0);
     QCOMPARE(message.aircraftID, "");
@@ -284,9 +285,9 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_receiverStatusMessage() {
 
     QCOMPARE(message.sentence, sentence);
     QCOMPARE(message.type, OgnMessageType::STATUS);
-    QVERIFY(qIsNaN(message.coordinate.latitude()));
-    QVERIFY(qIsNaN(message.coordinate.longitude()));
-    QVERIFY(qIsNaN(message.coordinate.altitude()));
+    QVERIFY(std::isnan(message.latitude));
+    QVERIFY(std::isnan(message.longitude));
+    QVERIFY(std::isnan(message.altitude));
     QCOMPARE(message.course, 0.0);
     QCOMPARE(message.speed, 0.0);
     QCOMPARE(message.aircraftID, "");
@@ -320,9 +321,9 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_weatherReport() {
     QCOMPARE(message.type, OgnMessageType::WEATHER);
     QCOMPARE(message.symbol, OgnSymbol::WEATHERSTATION);
 
-    QCOMPARE(message.coordinate.latitude(), 48.0653333333);
-    QCOMPARE(message.coordinate.longitude(), 8.0155);
-    QVERIFY(qIsNaN(message.coordinate.altitude()));
+    QCOMPARE(message.latitude, 48.0653333333);
+    QCOMPARE(message.longitude, 8.0155);
+    QVERIFY(std::isnan(message.altitude));
 
     QCOMPARE(message.wind_direction, 292);
     QCOMPARE(message.wind_speed, 5);
