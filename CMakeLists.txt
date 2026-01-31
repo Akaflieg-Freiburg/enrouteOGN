@@ -34,11 +34,16 @@ set_target_properties(enrouteOGN PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
-# Enable testing (no Qt required)
-enable_testing()
+# Determine if subdirectories should be excluded from default build
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    # Standalone build - include everything in default build
+    set(ENROUTE_OGN_EXCLUDE_FROM_ALL "")
+    enable_testing()
+else()
+    # Integrated build - exclude tests and utilities from default build
+    set(ENROUTE_OGN_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
+endif()
 
-# Add tests subdirectory (Qt-free tests)
-add_subdirectory(tests)
-
-# Add dumpOGN subdirectory (now also Qt-free)
-add_subdirectory(dumpOGN)
+# Add subdirectories (always configure, but exclude from default build when integrated)
+add_subdirectory(tests ${ENROUTE_OGN_EXCLUDE_FROM_ALL})
+add_subdirectory(dumpOGN ${ENROUTE_OGN_EXCLUDE_FROM_ALL})
