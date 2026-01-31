@@ -37,5 +37,5 @@ public:
      *  \param message The parsed OGN message
      *  \return Formatted string for output, or empty string if message should be skipped
      */
-    virtual QString format(const Traffic::Ogn::OgnMessage& message) = 0;
+    virtual QString format(const Ogn::OgnMessage& message) = 0;
 };

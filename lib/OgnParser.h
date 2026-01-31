@@ -26,7 +26,7 @@
 
 using namespace Qt::Literals::StringLiterals;
 
-namespace Traffic::Ogn {
+namespace Ogn {
 Q_NAMESPACE
 struct OgnMessage;
 

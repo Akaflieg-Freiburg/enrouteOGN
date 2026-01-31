@@ -31,7 +31,7 @@
 class OgnFormatter : public OutputFormatter
 {
 public:
-    QString format(const Traffic::Ogn::OgnMessage& message) override
+    QString format(const Ogn::OgnMessage& message) override
     {
         // Simply return the raw sentence as-is
         return message.sentence;

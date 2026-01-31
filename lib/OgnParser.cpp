@@ -40,58 +40,58 @@ using namespace Qt::Literals::StringLiterals;
 namespace {
 
 // see http://wiki.glidernet.org/wiki:ogn-flavoured-aprs
-using ATMap = QMap<QString, Traffic::Ogn::OgnAircraftType>; // Necessary because Q_GLOBAL_STATIC does not like templates
+using ATMap = QMap<QString, Ogn::OgnAircraftType>; // Necessary because Q_GLOBAL_STATIC does not like templates
 Q_GLOBAL_STATIC(ATMap, AircraftTypeMap,
                 {
-                    {"/z",  Traffic::Ogn::OgnAircraftType::unknown},         // Unknown
-                    {"/'",  Traffic::Ogn::OgnAircraftType::Glider},          // Glider
-                    {"/X",  Traffic::Ogn::OgnAircraftType::Copter},          // Helicopter
-                    {"/g",  Traffic::Ogn::OgnAircraftType::Paraglider},      // Parachute, Hang Glider, Paraglider
-                    {"\\^", Traffic::Ogn::OgnAircraftType::Aircraft},        // Drop Plane, Powered Aircraft
-                    {"/^",  Traffic::Ogn::OgnAircraftType::Jet},             // Jet Aircraft
-                    {"/O",  Traffic::Ogn::OgnAircraftType::Balloon},         // Balloon, Airship
-                    {"\\n", Traffic::Ogn::OgnAircraftType::StaticObstacle},  // Static Object
+                    {"/z",  Ogn::OgnAircraftType::unknown},         // Unknown
+                    {"/'",  Ogn::OgnAircraftType::Glider},          // Glider
+                    {"/X",  Ogn::OgnAircraftType::Copter},          // Helicopter
+                    {"/g",  Ogn::OgnAircraftType::Paraglider},      // Parachute, Hang Glider, Paraglider
+                    {"\\^", Ogn::OgnAircraftType::Aircraft},        // Drop Plane, Powered Aircraft
+                    {"/^",  Ogn::OgnAircraftType::Jet},             // Jet Aircraft
+                    {"/O",  Ogn::OgnAircraftType::Balloon},         // Balloon, Airship
+                    {"\\n", Ogn::OgnAircraftType::StaticObstacle},  // Static Object
                 });
 
-using ASMap = QMap<QString, Traffic::Ogn::OgnSymbol>; // Necessary because Q_GLOBAL_STATIC does not like templates
+using ASMap = QMap<QString, Ogn::OgnSymbol>; // Necessary because Q_GLOBAL_STATIC does not like templates
 Q_GLOBAL_STATIC(ASMap, AprsSymbolMap,
                 {
-                    {"/z",  Traffic::Ogn::OgnSymbol::UNKNOWN},        // Unknown
-                    {"/'",  Traffic::Ogn::OgnSymbol::GLIDER},         // Glider
-                    {"/X",  Traffic::Ogn::OgnSymbol::HELICOPTER},     // Helicopter
-                    {"/g",  Traffic::Ogn::OgnSymbol::PARACHUTE},      // Parachute, Hang Glider, Paraglider
-                    {"\\^", Traffic::Ogn::OgnSymbol::AIRCRAFT},       // Drop Plane, Powered Aircraft
-                    {"/^",  Traffic::Ogn::OgnSymbol::JET},            // Jet Aircraft
-                    {"/O",  Traffic::Ogn::OgnSymbol::BALLOON},        // Balloon, Airship
-                    {"\\n", Traffic::Ogn::OgnSymbol::STATIC_OBJECT},  // Static Object
-                    {"/_",  Traffic::Ogn::OgnSymbol::WEATHERSTATION},  // WeatherStation
+                    {"/z",  Ogn::OgnSymbol::UNKNOWN},        // Unknown
+                    {"/'",  Ogn::OgnSymbol::GLIDER},         // Glider
+                    {"/X",  Ogn::OgnSymbol::HELICOPTER},     // Helicopter
+                    {"/g",  Ogn::OgnSymbol::PARACHUTE},      // Parachute, Hang Glider, Paraglider
+                    {"\\^", Ogn::OgnSymbol::AIRCRAFT},       // Drop Plane, Powered Aircraft
+                    {"/^",  Ogn::OgnSymbol::JET},            // Jet Aircraft
+                    {"/O",  Ogn::OgnSymbol::BALLOON},        // Balloon, Airship
+                    {"\\n", Ogn::OgnSymbol::STATIC_OBJECT},  // Static Object
+                    {"/_",  Ogn::OgnSymbol::WEATHERSTATION},  // WeatherStation
                 });
 
 // see http://wiki.glidernet.org/wiki:ogn-flavoured-aprs
-using ACMap = QMap<uint32_t, Traffic::Ogn::OgnAircraftType>;
+using ACMap = QMap<uint32_t, Ogn::OgnAircraftType>;
 Q_GLOBAL_STATIC(ACMap, AircraftCategoryMap,
                 {
-                    {0x0, Traffic::Ogn::OgnAircraftType::unknown},         // Reserved
-                    {0x1, Traffic::Ogn::OgnAircraftType::Glider},          // Glider/Motor Glider/TMG
-                    {0x2, Traffic::Ogn::OgnAircraftType::TowPlane},        // Tow Plane/Tug Plane
-                    {0x3, Traffic::Ogn::OgnAircraftType::Copter},          // Helicopter/Gyrocopter/Rotorcraft
-                    {0x4, Traffic::Ogn::OgnAircraftType::Skydiver},        // Skydiver/Parachute
-                    {0x5, Traffic::Ogn::OgnAircraftType::Aircraft},        // Drop Plane for Skydivers
-                    {0x6, Traffic::Ogn::OgnAircraftType::HangGlider},      // Hang Glider (hard)
-                    {0x7, Traffic::Ogn::OgnAircraftType::Paraglider},      // Paraglider (soft)
-                    {0x8, Traffic::Ogn::OgnAircraftType::Aircraft},        // Aircraft with reciprocating engine(s)
-                    {0x9, Traffic::Ogn::OgnAircraftType::Jet},             // Aircraft with jet/turboprop engine(s)
-                    {0xA, Traffic::Ogn::OgnAircraftType::unknown},         // Unknown
-                    {0xB, Traffic::Ogn::OgnAircraftType::Balloon},         // Balloon (hot, gas, weather, static)
-                    {0xC, Traffic::Ogn::OgnAircraftType::Airship},         // Airship/Blimp/Zeppelin
-                    {0xD, Traffic::Ogn::OgnAircraftType::Drone},           // UAV/RPAS/Drone
-                    {0xE, Traffic::Ogn::OgnAircraftType::unknown},         // Reserved
-                    {0xF, Traffic::Ogn::OgnAircraftType::StaticObstacle}   // Static Obstacle
+                    {0x0, Ogn::OgnAircraftType::unknown},         // Reserved
+                    {0x1, Ogn::OgnAircraftType::Glider},          // Glider/Motor Glider/TMG
+                    {0x2, Ogn::OgnAircraftType::TowPlane},        // Tow Plane/Tug Plane
+                    {0x3, Ogn::OgnAircraftType::Copter},          // Helicopter/Gyrocopter/Rotorcraft
+                    {0x4, Ogn::OgnAircraftType::Skydiver},        // Skydiver/Parachute
+                    {0x5, Ogn::OgnAircraftType::Aircraft},        // Drop Plane for Skydivers
+                    {0x6, Ogn::OgnAircraftType::HangGlider},      // Hang Glider (hard)
+                    {0x7, Ogn::OgnAircraftType::Paraglider},      // Paraglider (soft)
+                    {0x8, Ogn::OgnAircraftType::Aircraft},        // Aircraft with reciprocating engine(s)
+                    {0x9, Ogn::OgnAircraftType::Jet},             // Aircraft with jet/turboprop engine(s)
+                    {0xA, Ogn::OgnAircraftType::unknown},         // Unknown
+                    {0xB, Ogn::OgnAircraftType::Balloon},         // Balloon (hot, gas, weather, static)
+                    {0xC, Ogn::OgnAircraftType::Airship},         // Airship/Blimp/Zeppelin
+                    {0xD, Ogn::OgnAircraftType::Drone},           // UAV/RPAS/Drone
+                    {0xE, Ogn::OgnAircraftType::unknown},         // Reserved
+                    {0xF, Ogn::OgnAircraftType::StaticObstacle}   // Static Obstacle
                 });
 
 } // namespace
 
-namespace Traffic::Ogn {
+namespace Ogn {
 
 
 void OgnParser::parseAprsisMessage(OgnMessage& ognMessage)
@@ -426,7 +426,7 @@ void OgnParser::parseTrafficReport(OgnMessage& ognMessage, const QStringView hea
             ognMessage.stealthMode = hexcode & 0x80000000;
             ognMessage.noTrackingFlag = hexcode & 0x40000000;
             uint32_t const aircraftCategory = ((hexcode >> 26) & 0xF);
-            ognMessage.aircraftType = AircraftCategoryMap->value(aircraftCategory, Traffic::Ogn::OgnAircraftType::unknown);
+            ognMessage.aircraftType = AircraftCategoryMap->value(aircraftCategory, Ogn::OgnAircraftType::unknown);
             uint32_t const addressTypeValue = (hexcode >> 24) & 0x3;
             ognMessage.addressType = static_cast<OgnAddressType>(addressTypeValue);
             ognMessage.address = QStringView(ognMessage.aircraftID.cbegin()+2, 6);
@@ -542,4 +542,4 @@ QString OgnParser::formatFilterCommand(const QGeoCoordinate &receiveLocation, un
         .arg(receiveRadiusKm);
 }
 
-} // namespace Traffic::Ogn
+} // namespace Ogn

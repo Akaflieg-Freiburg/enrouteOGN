@@ -106,9 +106,9 @@ private slots:
         QString line;
         while (m_textStream.readLineInto(&line)) {
             // Parse OGN message
-            Traffic::Ogn::OgnMessage message;
+            Ogn::OgnMessage message;
             message.sentence = line;
-            Traffic::Ogn::OgnParser::parseAprsisMessage(message);
+            Ogn::OgnParser::parseAprsisMessage(message);
             
             // Format using the configured formatter
             const QString output = m_formatter->format(message);

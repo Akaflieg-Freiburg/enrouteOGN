@@ -4,7 +4,7 @@
 #include <QDebug>
 #include "OgnParser.h"
 
-using namespace Traffic::Ogn;
+using namespace Ogn;
 
 class TrafficDataSource_OgnTest : public QObject {
     Q_OBJECT
@@ -33,44 +33,44 @@ void TrafficDataSource_OgnTest::testFormatPositionReport() {
     double speed = 7.0;
     double altitude = 185.0136;
 
-    Traffic::Ogn::OgnAircraftType aircraftType = Traffic::Ogn::OgnAircraftType::unknown;
+    Ogn::OgnAircraftType aircraftType = Ogn::OgnAircraftType::unknown;
     QString currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     QString positionReport = OgnParser::formatPositionReport(
         callSign, coordinate, course, speed, altitude, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N/00102.04Wz086/007/A=000607\n");
 
-    aircraftType = Traffic::Ogn::OgnAircraftType::TowPlane;
+    aircraftType = Ogn::OgnAircraftType::TowPlane;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
         callSign, coordinate, course, speed, altitude, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N\\00102.04W^086/007/A=000607\n");
 
-    aircraftType = Traffic::Ogn::OgnAircraftType::Glider;
+    aircraftType = Ogn::OgnAircraftType::Glider;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
         callSign, coordinate, course, speed, altitude, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N/00102.04W'086/007/A=000607\n");
 
     // again to test the caching mechanism
-    aircraftType = Traffic::Ogn::OgnAircraftType::Glider;
+    aircraftType = Ogn::OgnAircraftType::Glider;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
         callSign, coordinate, course, speed, altitude, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N/00102.04W'086/007/A=000607\n");
 
-    aircraftType = Traffic::Ogn::OgnAircraftType::Aircraft;
+    aircraftType = Ogn::OgnAircraftType::Aircraft;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
         callSign, coordinate, course, speed, altitude, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N\\00102.04W^086/007/A=000607\n");
 
-    aircraftType = Traffic::Ogn::OgnAircraftType::Paraglider;
+    aircraftType = Ogn::OgnAircraftType::Paraglider;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
         callSign, coordinate, course, speed, altitude, aircraftType);
     QCOMPARE(positionReport, "ENR12345>APRS,TCPIP*: /"+currentTimeStamp+"h5111.32N/00102.04Wg086/007/A=000607\n");
 
-    aircraftType = Traffic::Ogn::OgnAircraftType::Copter;
+    aircraftType = Ogn::OgnAircraftType::Copter;
     currentTimeStamp = QDateTime::currentDateTimeUtc().toString("hhmmss");
     positionReport = OgnParser::formatPositionReport(
         callSign, coordinate, course, speed, altitude, aircraftType);
@@ -137,7 +137,7 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_validTrafficReport1() {
     QCOMPARE(message.signalStrength, "5.5dB");
     QCOMPARE(message.errorCount, "3e");
     QCOMPARE(message.frequencyOffset, "-4.3kHz");
-    QCOMPARE(message.aircraftType, Traffic::Ogn::OgnAircraftType::TowPlane);
+    QCOMPARE(message.aircraftType, Ogn::OgnAircraftType::TowPlane);
     QCOMPARE(message.addressType, OgnAddressType::FLARM);
     QCOMPARE(message.address, "DDE626");
     QCOMPARE(message.stealthMode, false);
@@ -165,7 +165,7 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_validTrafficReport2() {
     QCOMPARE(message.signalStrength, "");
     QCOMPARE(message.errorCount, "");
     QCOMPARE(message.frequencyOffset, "");
-    QCOMPARE(message.aircraftType, Traffic::Ogn::OgnAircraftType::Jet);
+    QCOMPARE(message.aircraftType, Ogn::OgnAircraftType::Jet);
     QCOMPARE(message.addressType, OgnAddressType::ICAO);
     QCOMPARE(message.address, "4D21C2");
     QCOMPARE(message.stealthMode, false);
@@ -193,7 +193,7 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_validTrafficReport3() {
     QCOMPARE(message.signalStrength, "");
     QCOMPARE(message.errorCount, "");
     QCOMPARE(message.frequencyOffset, "");
-    QCOMPARE(message.aircraftType, Traffic::Ogn::OgnAircraftType::Jet);
+    QCOMPARE(message.aircraftType, Ogn::OgnAircraftType::Jet);
     QCOMPARE(message.addressType, OgnAddressType::ICAO);
     QCOMPARE(message.address, "4D21C2");
     QCOMPARE(message.stealthMode, false);
@@ -220,7 +220,7 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_invalidMessage() {
     QCOMPARE(message.signalStrength, "");
     QCOMPARE(message.errorCount, "");
     QCOMPARE(message.frequencyOffset, "");
-    QCOMPARE(message.aircraftType, Traffic::Ogn::OgnAircraftType::unknown);
+    QCOMPARE(message.aircraftType, Ogn::OgnAircraftType::unknown);
     QCOMPARE(message.addressType, OgnAddressType::UNKNOWN);
     QCOMPARE(message.address, "");
     QCOMPARE(message.stealthMode, false);
@@ -247,7 +247,7 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_commentMessage() {
     QCOMPARE(message.signalStrength, "");
     QCOMPARE(message.errorCount, "");
     QCOMPARE(message.frequencyOffset, "");
-    QCOMPARE(message.aircraftType, Traffic::Ogn::OgnAircraftType::unknown);
+    QCOMPARE(message.aircraftType, Ogn::OgnAircraftType::unknown);
     QCOMPARE(message.addressType, OgnAddressType::UNKNOWN);
     QCOMPARE(message.address, "");
     QCOMPARE(message.stealthMode, false);
@@ -274,7 +274,7 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_receiverStatusMessage() {
     QCOMPARE(message.signalStrength, "");
     QCOMPARE(message.errorCount, "");
     QCOMPARE(message.frequencyOffset, "");
-    QCOMPARE(message.aircraftType, Traffic::Ogn::OgnAircraftType::unknown);
+    QCOMPARE(message.aircraftType, Ogn::OgnAircraftType::unknown);
     QCOMPARE(message.addressType, OgnAddressType::UNKNOWN);
     QCOMPARE(message.address, "");
     QCOMPARE(message.stealthMode, false);
@@ -317,7 +317,7 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_weatherReport() {
     QCOMPARE(message.rotationRate, "");
     QCOMPARE(message.errorCount, "");
     QCOMPARE(message.frequencyOffset, "");
-    QCOMPARE(message.aircraftType, Traffic::Ogn::OgnAircraftType::unknown);
+    QCOMPARE(message.aircraftType, Ogn::OgnAircraftType::unknown);
     QCOMPARE(message.addressType, OgnAddressType::UNKNOWN);
     QCOMPARE(message.address, "");
     QCOMPARE(message.stealthMode, false);
@@ -327,11 +327,11 @@ void TrafficDataSource_OgnTest::testParseAprsisMessage_weatherReport() {
 // run with "-perf" parameter
 void TrafficDataSource_OgnTest::testPerformanceOfParseAprsisMessage() {
     QString sentence = "FLRDDE626>APRS,qAS,EGHL:/074548h5111.32N/00102.04W'086/007/A=000607 id0ADDE626 -019fpm +0.0rot 5.5dB 3e -4.3kHz";
-    Traffic::Ogn::OgnMessage message;
+    Ogn::OgnMessage message;
     QBENCHMARK {
         message.reset();
         message.sentence = sentence;
-        Traffic::Ogn::OgnParser::parseAprsisMessage(message);
+        Ogn::OgnParser::parseAprsisMessage(message);
     }
 }
 

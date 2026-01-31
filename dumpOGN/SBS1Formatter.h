@@ -56,10 +56,10 @@
 class SBS1Formatter : public OutputFormatter
 {
 public:
-    QString format(const Traffic::Ogn::OgnMessage& message) override
+    QString format(const Ogn::OgnMessage& message) override
     {
-        // Only output traffic reports
-        if (message.type != Traffic::Ogn::OgnMessageType::TRAFFIC_REPORT) {
+        // SBS-1 is only for traffic reports
+        if (message.type != Ogn::OgnMessageType::TRAFFIC_REPORT) {
             return QString();
         }
         
