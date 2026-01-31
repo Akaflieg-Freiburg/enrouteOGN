@@ -66,7 +66,7 @@ Q_ENUM_NS(OgnAircraftType);
 *
 * This class is used in the UnitTest. It should not have external dependencies like GlobalObject.
 */
-class TrafficDataSource_OgnParser {
+class OgnParser {
 public:
     static void parseAprsisMessage(OgnMessage& ognMessage);
     static QString formatLoginString(QStringView callSign,

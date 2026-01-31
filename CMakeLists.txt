@@ -14,12 +14,12 @@ set(CMAKE_AUTOMOC ON)
 
 # Source files
 set(SOURCES
-    lib/TrafficDataSource_OgnParser.cpp
+    lib/OgnParser.cpp
 )
 
 # Header files
 set(HEADERS
-    lib/TrafficDataSource_OgnParser.h
+    lib/OgnParser.h
 )
 
 # Create static library

@@ -21,7 +21,7 @@
 #pragma once
 
 #include <QString>
-#include "TrafficDataSource_OgnParser.h"
+#include "OgnParser.h"
 
 /*! \brief Base class for output formatters
  *

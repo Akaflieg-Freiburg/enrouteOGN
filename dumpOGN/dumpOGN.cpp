@@ -108,7 +108,7 @@ private slots:
             // Parse OGN message
             Traffic::Ogn::OgnMessage message;
             message.sentence = line;
-            Traffic::Ogn::TrafficDataSource_OgnParser::parseAprsisMessage(message);
+            Traffic::Ogn::OgnParser::parseAprsisMessage(message);
             
             // Format using the configured formatter
             const QString output = m_formatter->format(message);

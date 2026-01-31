@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "TrafficDataSource_OgnParser.h"
+#include "OgnParser.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -94,7 +94,7 @@ Q_GLOBAL_STATIC(ACMap, AircraftCategoryMap,
 namespace Traffic::Ogn {
 
 
-void TrafficDataSource_OgnParser::parseAprsisMessage(OgnMessage& ognMessage)
+void OgnParser::parseAprsisMessage(OgnMessage& ognMessage)
 {
     if(ognMessage.type != OgnMessageType::UNKNOWN)
     {
@@ -158,7 +158,7 @@ void TrafficDataSource_OgnParser::parseAprsisMessage(OgnMessage& ognMessage)
 }
 
 
-double TrafficDataSource_OgnParser::decodeLatitude(const QStringView nmeaLatitude, QChar latitudeDirection, QChar latEnhancement)
+double OgnParser::decodeLatitude(QStringView nmeaLatitude, QChar latitudeDirection, QChar latEnhancement)
 {
     // e.g. "5111.32"
     if (nmeaLatitude.size() < 7) {
@@ -198,7 +198,7 @@ double TrafficDataSource_OgnParser::decodeLatitude(const QStringView nmeaLatitud
     return latitude;
 }
 
-double TrafficDataSource_OgnParser::decodeLongitude(const QStringView nmeaLongitude, QChar longitudeDirection, QChar lonEnhancement)
+double OgnParser::decodeLongitude(QStringView nmeaLongitude, QChar longitudeDirection, QChar lonEnhancement)
 {
     // e.g. "00102.04W"
     if (nmeaLongitude.size() < 8) {
@@ -238,7 +238,7 @@ double TrafficDataSource_OgnParser::decodeLongitude(const QStringView nmeaLongit
     return longitude;
 }
 
-void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, const QStringView header, const QStringView body)
+void OgnParser::parseTrafficReport(OgnMessage& ognMessage, const QStringView header, const QStringView body)
 {
     // e.g. header = "FLRDDE626>APRS,qAS,EGHL:"
     // e.g. body = "/074548h5111.32N/00102.04W'086/007/A=000607 id0ADDE626 -019fpm +0.0rot 5.5dB 3e -4.3kHz" (traffic report)
@@ -441,19 +441,19 @@ void TrafficDataSource_OgnParser::parseTrafficReport(OgnMessage& ognMessage, con
     #endif
 }
 
-void TrafficDataSource_OgnParser::parseCommentMessage(OgnMessage& ognMessage)
+void OgnParser::parseCommentMessage(OgnMessage& ognMessage)
 {
     ognMessage.type = OgnMessageType::COMMENT;
 }
 
-void TrafficDataSource_OgnParser::parseStatusMessage(OgnMessage &ognMessage,
+void OgnParser::parseStatusMessage(OgnMessage &ognMessage,
                                                      const QStringView /*header*/,
                                                      const QStringView /*body*/)
 {
     ognMessage.type = OgnMessageType::STATUS;
 }
 
-QString TrafficDataSource_OgnParser::formatPositionReport(const QStringView callSign,
+QString OgnParser::formatPositionReport(const QStringView callSign,
                                                           const QGeoCoordinate &coordinate,
                                                           double course,
                                                           double speed,
@@ -505,7 +505,7 @@ QString TrafficDataSource_OgnParser::formatPositionReport(const QStringView call
              QString::number(altitudeFeet, 'f', 0).rightJustified(6, '0')); // Altitude in feet
 }
 
-QString TrafficDataSource_OgnParser::formatLatitude(double latitude)
+QString OgnParser::formatLatitude(double latitude)
 {
     // e.g. "5111.32N"
     QString const direction = latitude >= 0 ? "N" : "S";
@@ -517,7 +517,7 @@ QString TrafficDataSource_OgnParser::formatLatitude(double latitude)
         .arg(QString::number(minutes, 'f', 2).rightJustified(5, '0'), direction);
 }
 
-QString TrafficDataSource_OgnParser::formatLongitude(double longitude)
+QString OgnParser::formatLongitude(double longitude)
 {
     // e.g. "00102.04W"
     QString const direction = longitude >= 0 ? "E" : "W";
@@ -529,7 +529,7 @@ QString TrafficDataSource_OgnParser::formatLongitude(double longitude)
         .arg(QString::number(minutes, 'f', 2).rightJustified(5, '0'), direction);
 }
 
-QString TrafficDataSource_OgnParser::formatFilterCommand(const QGeoCoordinate &receiveLocation, unsigned int receiveRadiusKm)
+QString OgnParser::formatFilterCommand(const QGeoCoordinate &receiveLocation, unsigned int receiveRadiusKm)
 {
     // e.g. "# filter r/-48.0000/7.8512/99 t/o\n"
     if (!receiveLocation.isValid())

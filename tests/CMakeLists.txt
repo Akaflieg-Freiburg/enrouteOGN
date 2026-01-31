@@ -4,7 +4,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Core5Compat Test Network Location Posi
 # Add the test executable
 add_executable(unittestOgn
     TrafficDataSource_OgnTest.cpp
-    ../lib/TrafficDataSource_OgnParser.cpp
+    ../lib/OgnParser.cpp
 )
 
 # Include the source directory to find headers
