@@ -33,6 +33,8 @@ target_compile_definitions(unittestOgn
     QT_DISABLE_DEPRECATED_BEFORE=0x051200
 )
 
-# Register the test executable with CTest
-add_test(NAME TrafficDataSource_OgnTest COMMAND unittestOgn)
+# Copy the received_data.txt file to the build directory
+configure_file(received_data.txt ${CMAKE_CURRENT_BINARY_DIR}/received_data.txt COPYONLY)
 
+# Register the unittestOgn executable with CTest
+add_test(NAME unittestOgn COMMAND unittestOgn)
