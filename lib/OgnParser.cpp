@@ -169,8 +169,8 @@ double OgnParser::decodeLatitude(std::string_view nmeaLatitude, char latitudeDir
 
     // Parse degrees (first 2 characters)
     double latitudeDegrees = 0.0;
-#ifdef __ANDROID__
-    // Android NDK doesn't support std::from_chars for floating-point yet
+#if defined(__ANDROID__) || defined(__APPLE__)
+    // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
     char* endPtr = nullptr;
     char degreesBuffer[3] = {nmeaLatitude[0], nmeaLatitude[1], '\0'};
     latitudeDegrees = std::strtod(degreesBuffer, &endPtr);
@@ -178,7 +178,7 @@ double OgnParser::decodeLatitude(std::string_view nmeaLatitude, char latitudeDir
         return std::numeric_limits<double>::quiet_NaN();
     }
 #else
-    auto result = std::from_chars(&*nmeaLatitude.begin(), &*nmeaLatitude.begin() + 2, latitudeDegrees);
+    auto result = std::from_chars(nmeaLatitude.data(), nmeaLatitude.data() + 2, latitudeDegrees);
     if (result.ec != std::errc{}) {
         // Debug: decodeLatitude from_chars failed 1
         return std::numeric_limits<double>::quiet_NaN();
@@ -188,8 +188,8 @@ double OgnParser::decodeLatitude(std::string_view nmeaLatitude, char latitudeDir
     // Parse minutes (remaining characters after the first 2)
     double latitudeMinutes = 0.0;
     std::string_view const minutesStr = nmeaLatitude.substr(2);
-#ifdef __ANDROID__
-    // Android NDK doesn't support std::from_chars for floating-point yet
+#if defined(__ANDROID__) || defined(__APPLE__)
+    // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
     std::string minutesString(minutesStr);
     latitudeMinutes = std::strtod(minutesString.c_str(), &endPtr);
     if (endPtr == minutesString.c_str()) {
@@ -234,8 +234,8 @@ double OgnParser::decodeLongitude(std::string_view nmeaLongitude, char longitude
 
     // Parse degrees (first 3 characters)
     double longitudeDegrees = 0.0;
-#ifdef __ANDROID__
-    // Android NDK doesn't support std::from_chars for floating-point yet
+#if defined(__ANDROID__) || defined(__APPLE__)
+    // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
     char* endPtr = nullptr;
     char degreesBuffer[4] = {nmeaLongitude[0], nmeaLongitude[1], nmeaLongitude[2], '\0'};
     longitudeDegrees = std::strtod(degreesBuffer, &endPtr);
@@ -243,7 +243,7 @@ double OgnParser::decodeLongitude(std::string_view nmeaLongitude, char longitude
         return std::numeric_limits<double>::quiet_NaN();
     }
 #else
-    auto result = std::from_chars(&*nmeaLongitude.begin(), &*nmeaLongitude.begin() + 3, longitudeDegrees);
+    auto result = std::from_chars(nmeaLongitude.data(), nmeaLongitude.data() + 3, longitudeDegrees);
     if (result.ec != std::errc{}) {
         // Debug: lon from_chars failed 1
         return std::numeric_limits<double>::quiet_NaN();
@@ -253,8 +253,8 @@ double OgnParser::decodeLongitude(std::string_view nmeaLongitude, char longitude
     // Parse minutes (remaining characters after the first 3)
     double longitudeMinutes = 0.0;
     std::string_view const minutesStr = nmeaLongitude.substr(3);
-#ifdef __ANDROID__
-    // Android NDK doesn't support std::from_chars for floating-point yet
+#if defined(__ANDROID__) || defined(__APPLE__)
+    // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
     std::string minutesString(minutesStr);
     longitudeMinutes = std::strtod(minutesString.c_str(), &endPtr);
     if (endPtr == minutesString.c_str()) {
