@@ -1,0 +1,29 @@
+name: Compile and Test on Linux
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - ".gitignore"
+      - "README.md"
+      # ignore CI for other platforms
+      - ".github/workflows/android.yml"
+      - ".github/workflows/api.yml"
+      - ".github/workflows/ios.yml"
+      - ".github/workflows/macos.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout enrouteOGN
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    - name: Compile and Test
+      run: |
+        ./build-and-test.sh
