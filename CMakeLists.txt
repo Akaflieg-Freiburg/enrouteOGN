@@ -45,5 +45,8 @@ else()
 endif()
 
 # Add subdirectories (always configure, but exclude from default build when integrated)
-add_subdirectory(tests ${ENROUTE_OGN_EXCLUDE_FROM_ALL})
-add_subdirectory(dumpOGN ${ENROUTE_OGN_EXCLUDE_FROM_ALL})
+# Don't build test executables and tools for iOS - does not support simple executables.
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    add_subdirectory(tests ${ENROUTE_OGN_EXCLUDE_FROM_ALL})
+    add_subdirectory(dumpOGN ${ENROUTE_OGN_EXCLUDE_FROM_ALL})
+endif()
