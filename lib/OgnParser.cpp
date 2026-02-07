@@ -31,6 +31,10 @@
 #include <map>
 #include <cassert>
 
+#if defined(__APPLE__) || defined(__ANDROID__)
+#include <xlocale.h>
+#endif
+
 #define OGNPARSER_DEBUG 0
 
 namespace {
@@ -190,9 +194,14 @@ double OgnParser::decodeLatitude(std::string_view nmeaLatitude, char latitudeDir
     std::string_view const minutesStr = nmeaLatitude.substr(2);
 #if defined(__ANDROID__) || defined(__APPLE__)
     // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
-    const std::string minutesString(minutesStr);
-    latitudeMinutes = std::strtod(minutesString.c_str(), &endPtr);
-    if (endPtr == minutesString.c_str()) {
+    // Use strtod_l with C locale to ensure locale-independent parsing
+    char minutesBuffer[16];
+    size_t copyLen = minutesStr.size() < 15 ? minutesStr.size() : 15;
+    std::copy_n(minutesStr.data(), copyLen, minutesBuffer);
+    minutesBuffer[copyLen] = '\0';
+    static locale_t c_locale = newlocale(LC_ALL_MASK, "C", (locale_t)0);
+    latitudeMinutes = strtod_l(minutesBuffer, &endPtr, c_locale);
+    if (endPtr == minutesBuffer) {
         return std::numeric_limits<double>::quiet_NaN();
     }
 #else
@@ -255,9 +264,14 @@ double OgnParser::decodeLongitude(std::string_view nmeaLongitude, char longitude
     std::string_view const minutesStr = nmeaLongitude.substr(3);
 #if defined(__ANDROID__) || defined(__APPLE__)
     // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
-    const std::string minutesString(minutesStr);
-    longitudeMinutes = std::strtod(minutesString.c_str(), &endPtr);
-    if (endPtr == minutesString.c_str()) {
+    // Use strtod_l with C locale to ensure locale-independent parsing
+    char minutesBuffer[16];
+    size_t copyLen = minutesStr.size() < 15 ? minutesStr.size() : 15;
+    std::copy_n(minutesStr.data(), copyLen, minutesBuffer);
+    minutesBuffer[copyLen] = '\0';
+    static locale_t c_locale = newlocale(LC_ALL_MASK, "C", (locale_t)0);
+    longitudeMinutes = strtod_l(minutesBuffer, &endPtr, c_locale);
+    if (endPtr == minutesBuffer) {
         return std::numeric_limits<double>::quiet_NaN();
     }
 #else
