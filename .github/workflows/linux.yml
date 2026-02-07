@@ -27,6 +27,13 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
+    - name: Install locales for testing
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y locales
+        sudo locale-gen de_DE.UTF-8
+        sudo locale-gen fr_FR.UTF-8
+        sudo update-locale
     - name: Compile and Test
       run: |
         ./build-and-test.sh

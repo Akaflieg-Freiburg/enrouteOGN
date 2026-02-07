@@ -8,9 +8,11 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include <locale>
 #include <cassert>
 #include <cstring>
 #include <ctime>
+#include <functional>
 
 using namespace Ogn;
 
@@ -59,6 +61,43 @@ std::string getCurrentUtcTimeString() {
     std::snprintf(buffer, sizeof(buffer), "%02d%02d%02d", utc_tm->tm_hour, utc_tm->tm_min, utc_tm->tm_sec);
     return buffer;
 }
+
+// Forward declarations
+bool testFormatLoginString();
+bool testFormatFilterCommand();
+bool testFormatPositionReport();
+bool testParseAprsisMessage_validTrafficReport1();
+bool testParseAprsisMessage_validTrafficReport2();
+bool testParseAprsisMessage_validTrafficReport3();
+bool testParseAprsisMessage_Docu();
+bool testParseAprsisMessage_invalidMessage();
+bool testParseAprsisMessage_commentMessage();
+bool testParseAprsisMessage_receiverStatusMessage();
+bool testParseAprsisMessage_weatherReport();
+bool testParseAprsisMessage_multipleMessages();
+bool testPerformanceOfParseAprsisMessage();
+
+// Test registry
+struct Test {
+    const char* name;
+    std::function<bool()> func;
+};
+
+const Test tests[] = {
+    {"testFormatLoginString", testFormatLoginString},
+    {"testFormatFilterCommand", testFormatFilterCommand},
+    {"testFormatPositionReport", testFormatPositionReport},
+    {"testParseAprsisMessage_validTrafficReport1", testParseAprsisMessage_validTrafficReport1},
+    {"testParseAprsisMessage_validTrafficReport2", testParseAprsisMessage_validTrafficReport2},
+    {"testParseAprsisMessage_validTrafficReport3", testParseAprsisMessage_validTrafficReport3},
+    {"testParseAprsisMessage_Docu", testParseAprsisMessage_Docu},
+    {"testParseAprsisMessage_invalidMessage", testParseAprsisMessage_invalidMessage},
+    {"testParseAprsisMessage_commentMessage", testParseAprsisMessage_commentMessage},
+    {"testParseAprsisMessage_receiverStatusMessage", testParseAprsisMessage_receiverStatusMessage},
+    {"testParseAprsisMessage_weatherReport", testParseAprsisMessage_weatherReport},
+    {"testParseAprsisMessage_multipleMessages", testParseAprsisMessage_multipleMessages},
+    {"testPerformanceOfParseAprsisMessage", testPerformanceOfParseAprsisMessage},
+};
 
 bool testFormatLoginString() {
     const std::string_view callsign = "ENR12345";
@@ -299,43 +338,59 @@ bool testPerformanceOfParseAprsisMessage() {
 int main() {
     std::cout << "********* Start testing of OgnParser *********" << std::endl;
     
-    int passed = 0;
-    int failed = 0;
-    
-    struct Test {
-        const char* name;
-        bool (*func)();
+    // List of locales to test - ensures locale independence
+    // This addresses issue #613 where German locale caused commas instead of decimal points
+    const std::vector<const char*> locales = {
+        "C",              // Standard C locale (decimal point)
+        "en_US.UTF-8",    // US English (decimal point)
+        "de_DE.UTF-8",    // German (comma as decimal separator)
+        "fr_FR.UTF-8"     // French (comma as decimal separator)
     };
     
-    Test tests[] = {
-        {"testFormatLoginString", testFormatLoginString},
-        {"testFormatFilterCommand", testFormatFilterCommand},
-        {"testFormatPositionReport", testFormatPositionReport},
-        {"testParseAprsisMessage_validTrafficReport1", testParseAprsisMessage_validTrafficReport1},
-        {"testParseAprsisMessage_validTrafficReport2", testParseAprsisMessage_validTrafficReport2},
-        {"testParseAprsisMessage_validTrafficReport3", testParseAprsisMessage_validTrafficReport3},
-        {"testParseAprsisMessage_Docu", testParseAprsisMessage_Docu},
-        {"testParseAprsisMessage_invalidMessage", testParseAprsisMessage_invalidMessage},
-        {"testParseAprsisMessage_commentMessage", testParseAprsisMessage_commentMessage},
-        {"testParseAprsisMessage_receiverStatusMessage", testParseAprsisMessage_receiverStatusMessage},
-        {"testParseAprsisMessage_weatherReport", testParseAprsisMessage_weatherReport},
-        {"testParseAprsisMessage_multipleMessages", testParseAprsisMessage_multipleMessages},
-        {"testPerformanceOfParseAprsisMessage", testPerformanceOfParseAprsisMessage},
-    };
+    int totalPassed = 0;
+    int totalFailed = 0;
     
     for (const auto& test : tests) {
-        std::cout << "Running: " << test.name << "... ";
-        if (test.func()) {
-            std::cout << "PASS" << std::endl;
-            passed++;
-        } else {
-            std::cout << "FAIL" << std::endl;
-            failed++;
+        std::cout << "\nRunning: " << test.name << std::endl;
+        
+        int passed = 0;
+        int failed = 0;
+        
+        for (const char* localeName : locales) {
+            // Try to set the locale
+            try {
+                std::locale::global(std::locale(localeName));
+            } catch (const std::runtime_error&) {
+                std::cerr << "\033[31mWarning: Locale " << localeName << " not available on this system. Skipping tests for this locale.\033[0m" << std::endl;
+                continue;
+            }
+            
+            // Skip performance test for non-C locales to keep test time reasonable
+            if (std::string(test.name) == "testPerformanceOfParseAprsisMessage" && 
+                std::string(localeName) != "C") {
+                continue;
+            }
+            
+            std::cout << "  [" << localeName << "] ";
+            if (test.func()) {
+                std::cout << "PASS" << std::endl;
+                passed++;
+            } else {
+                std::cout << "FAIL" << std::endl;
+                failed++;
+            }
         }
+        
+        std::cout << "  " << test.name << ": " << passed << " passed, " << failed << " failed" << std::endl;
+        totalPassed += passed;
+        totalFailed += failed;
     }
     
-    std::cout << "Totals: " << passed << " passed, " << failed << " failed" << std::endl;
+    // Restore C locale
+    std::locale::global(std::locale::classic());
+    
+    std::cout << "\nTotals: " << totalPassed << " passed, " << totalFailed << " failed" << std::endl;
     std::cout << "********* Finished testing of OgnParser *********" << std::endl;
     
-    return failed > 0 ? 1 : 0;
+    return totalFailed > 0 ? 1 : 0;
 }
