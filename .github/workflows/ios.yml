@@ -2,8 +2,8 @@ name: Compile on iOS
 
 on:
   push:
-    branches: [ main ]
-    paths-ignore:
+    branches: [ main, develop, test ]
+    paths-ignore: &paths-ignore
       - ".gitignore"
       - "README.md"
       # ignore CI for other platforms
@@ -11,6 +11,9 @@ on:
       - ".github/workflows/api.yml"
       - ".github/workflows/linux.yml"
       - ".github/workflows/macos.yml"
+  pull_request:
+    branches: [ main, develop, test ]
+    paths-ignore: *paths-ignore
   workflow_dispatch:
 
 jobs:
