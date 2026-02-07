@@ -172,7 +172,7 @@ double OgnParser::decodeLatitude(std::string_view nmeaLatitude, char latitudeDir
 #if defined(__ANDROID__) || defined(__APPLE__)
     // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
     char* endPtr = nullptr;
-    char degreesBuffer[3] = {nmeaLatitude[0], nmeaLatitude[1], '\0'};
+    const char degreesBuffer[3] = {nmeaLatitude[0], nmeaLatitude[1], '\0'};
     latitudeDegrees = std::strtod(degreesBuffer, &endPtr);
     if (endPtr == degreesBuffer) {
         return std::numeric_limits<double>::quiet_NaN();
@@ -190,7 +190,7 @@ double OgnParser::decodeLatitude(std::string_view nmeaLatitude, char latitudeDir
     std::string_view const minutesStr = nmeaLatitude.substr(2);
 #if defined(__ANDROID__) || defined(__APPLE__)
     // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
-    std::string minutesString(minutesStr);
+    const std::string minutesString(minutesStr);
     latitudeMinutes = std::strtod(minutesString.c_str(), &endPtr);
     if (endPtr == minutesString.c_str()) {
         return std::numeric_limits<double>::quiet_NaN();
@@ -237,7 +237,7 @@ double OgnParser::decodeLongitude(std::string_view nmeaLongitude, char longitude
 #if defined(__ANDROID__) || defined(__APPLE__)
     // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
     char* endPtr = nullptr;
-    char degreesBuffer[4] = {nmeaLongitude[0], nmeaLongitude[1], nmeaLongitude[2], '\0'};
+    const char degreesBuffer[4] = {nmeaLongitude[0], nmeaLongitude[1], nmeaLongitude[2], '\0'};
     longitudeDegrees = std::strtod(degreesBuffer, &endPtr);
     if (endPtr == degreesBuffer) {
         return std::numeric_limits<double>::quiet_NaN();
@@ -255,7 +255,7 @@ double OgnParser::decodeLongitude(std::string_view nmeaLongitude, char longitude
     std::string_view const minutesStr = nmeaLongitude.substr(3);
 #if defined(__ANDROID__) || defined(__APPLE__)
     // Android NDK and Apple platforms don't support std::from_chars for floating-point yet
-    std::string minutesString(minutesStr);
+    const std::string minutesString(minutesStr);
     longitudeMinutes = std::strtod(minutesString.c_str(), &endPtr);
     if (endPtr == minutesString.c_str()) {
         return std::numeric_limits<double>::quiet_NaN();
@@ -368,7 +368,7 @@ void OgnParser::parseTrafficReport(OgnMessage& ognMessage, const std::string_vie
     // Parse symbol
     char const symbolTable = aprsPart[16];
     char const symbolCode = aprsPart[26];
-    char symbolKey[3] = {symbolTable, symbolCode, '\0'};
+    const char symbolKey[3] = {symbolTable, symbolCode, '\0'};
     auto it = AprsSymbolMap.find(symbolKey);
     if (it != AprsSymbolMap.end()) {
         ognMessage.symbol = it->second;
@@ -635,33 +635,22 @@ std::string OgnParser::formatPositionReport(const std::string_view callSign,
     // Get current UTC time
     const std::time_t now = std::time(nullptr);
     const std::tm* utc_tm = std::gmtime(&now);
-    char timeStr[7];
-    std::snprintf(timeStr, sizeof(timeStr), "%02d%02d%02d", utc_tm->tm_hour, utc_tm->tm_min, utc_tm->tm_sec);
 
-    // Format course, speed, altitude with padding
-    char courseStr[4], speedStr[4], altitudeStr[7];
-    std::snprintf(courseStr, sizeof(courseStr), "%03d", static_cast<int>(course));
-    std::snprintf(speedStr, sizeof(speedStr), "%03d", static_cast<int>(speed));
-    std::snprintf(altitudeStr, sizeof(altitudeStr), "%06d", static_cast<int>(altitudeFeet));
+    // Format position report using ostringstream with "C" locale to ensure decimal points, not commas
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << callSign << ">APRS,TCPIP*: /"
+        << std::setfill('0') << std::setw(2) << utc_tm->tm_hour
+        << std::setw(2) << utc_tm->tm_min
+        << std::setw(2) << utc_tm->tm_sec
+        << "h" << formatLatitude(latitude)
+        << lastSymbol[0] << formatLongitude(longitude)
+        << lastSymbol[1]
+        << std::setw(3) << static_cast<int>(course) << "/"
+        << std::setw(3) << static_cast<int>(speed) << "/A="
+        << std::setw(6) << static_cast<int>(altitudeFeet) << "\n";
 
-    std::string result;
-    result.reserve(100);
-    result += callSign;
-    result += ">APRS,TCPIP*: /";
-    result += timeStr;
-    result += "h";
-    result += formatLatitude(latitude);
-    result += lastSymbol[0];
-    result += formatLongitude(longitude);
-    result += lastSymbol[1];
-    result += courseStr;
-    result += "/";
-    result += speedStr;
-    result += "/A=";
-    result += altitudeStr;
-    result += "\n";
-
-    return result;
+    return oss.str();
 }
 
 std::string OgnParser::formatLatitude(double latitude)
@@ -672,9 +661,13 @@ std::string OgnParser::formatLatitude(double latitude)
     int const degrees = static_cast<int>(latitude);
     double const minutes = (latitude - degrees) * 60.0;
     
-    char buffer[16];
-    std::snprintf(buffer, sizeof(buffer), "%02d%05.2f%s", degrees, minutes, direction);
-    return std::string(buffer);
+    // Use ostringstream with "C" locale to ensure decimal points, not commas
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << std::setfill('0') << std::setw(2) << degrees
+        << std::fixed << std::setprecision(2) << std::setw(5) << minutes
+        << direction;
+    return oss.str();
 }
 
 std::string OgnParser::formatLongitude(double longitude)
@@ -685,9 +678,13 @@ std::string OgnParser::formatLongitude(double longitude)
     int const degrees = static_cast<int>(longitude);
     double const minutes = (longitude - degrees) * 60.0;
     
-    char buffer[16];
-    std::snprintf(buffer, sizeof(buffer), "%03d%05.2f%s", degrees, minutes, direction);
-    return std::string(buffer);
+    // Use ostringstream with "C" locale to ensure decimal points, not commas
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << std::setfill('0') << std::setw(3) << degrees
+        << std::fixed << std::setprecision(2) << std::setw(5) << minutes
+        << direction;
+    return oss.str();
 }
 
 std::string OgnParser::calculatePassword(std::string_view callSign)
@@ -733,17 +730,27 @@ std::string OgnParser::formatLoginString(std::string_view callSign,
 std::string OgnParser::formatFilter(double latitude, double longitude, unsigned int receiveRadius)
 {
     // e.g. "filter r/-48.0000/7.8512/99 t/o"
-    char buffer[64];
-    std::snprintf(buffer, sizeof(buffer), "filter r/%.4f/%.4f/%u t/o", latitude, longitude, receiveRadius);
-    return std::string(buffer);
+    // Use ostringstream with "C" locale to ensure decimal points, not commas
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << "filter r/"
+        << std::fixed << std::setprecision(4) << latitude << "/"
+        << std::fixed << std::setprecision(4) << longitude << "/"
+        << receiveRadius << " t/o";
+    return oss.str();
 }
 
 std::string OgnParser::formatFilterCommand(double latitude, double longitude, unsigned int receiveRadiusKm)
 {
     // e.g. "# filter r/-48.0000/7.8512/99 t/o\n"
-    char buffer[64];
-    std::snprintf(buffer, sizeof(buffer), "# filter r/%.4f/%.4f/%u t/o\n", latitude, longitude, receiveRadiusKm);
-    return std::string(buffer);
+    // Use ostringstream with "C" locale to ensure decimal points, not commas
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss << "# filter r/"
+        << std::fixed << std::setprecision(4) << latitude << "/"
+        << std::fixed << std::setprecision(4) << longitude << "/"
+        << receiveRadiusKm << " t/o\n";
+    return oss.str();
 }
 
 } // namespace Ogn
