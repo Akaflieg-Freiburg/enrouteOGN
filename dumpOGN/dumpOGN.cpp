@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include "OgnParser.h"
+#include "OgnFilter.h"
 #include "OgnFormatter.h"
 #include "SBS1Formatter.h"
 
@@ -215,6 +216,9 @@ int main(int argc, char *argv[])
     OutputFormatter* formatter = sbs1Mode ? static_cast<OutputFormatter*>(&sbs1Formatter) 
                                           : static_cast<OutputFormatter*>(&ognFormatter);
 
+    // Filter to suppress duplicate and out-of-order messages
+    Ogn::OgnFilter filter;
+
     // Read and process messages
     std::string buffer;
     std::string line;
@@ -223,7 +227,12 @@ int main(int argc, char *argv[])
         Ogn::OgnMessage message;
         message.sentence = line;
         Ogn::OgnParser::parseAprsisMessage(message);
-        
+
+        // Skip messages that are not new (older or equal timestamp to cached data)
+        if (!filter.filter(message)) {
+            continue;
+        }
+
         // Format using the configured formatter
         const std::string output = formatter->format(message);
         if (!output.empty()) {

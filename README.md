@@ -7,8 +7,8 @@ A lightweight parser library for the [Open Glider Network](https://www.glidernet
 The library is organized as follows:
 
 - **lib/**: Core library (Qt-free, C++17 only)
-  - `OgnParser.h` - Public API
-  - `OgnParser.cpp` - Implementation
+  - `OgnParser.h` / `OgnParser.cpp` - Parses APRS-IS sentences into `OgnMessage` structs
+  - `OgnFilter.h` / `OgnFilter.cpp` - Filters out messages with outdated timestamps and enriches them with cached aircraft type information
 - **tests/**: Unit tests (uses CTest)
 - **dumpOGN/**: Utility for dumping OGN data 
 

@@ -8,11 +8,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Source files
 set(SOURCES
+    lib/OgnFilter.cpp
     lib/OgnParser.cpp
 )
 
 # Header files
 set(HEADERS
+    lib/OgnFilter.h
     lib/OgnParser.h
 )
 
