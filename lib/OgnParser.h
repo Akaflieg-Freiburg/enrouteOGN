@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -132,7 +133,7 @@ struct OgnMessage
     OgnMessageType type = OgnMessageType::UNKNOWN; // e.g. OgnMessageType::TRAFFIC_REPORT
 
     std::string_view sourceId;       // like ENROUTE12345
-    std::string_view timestamp;      // hhmmss
+    std::chrono::system_clock::time_point timestamp; // UTC time of the message
     double latitude = std::numeric_limits<double>::quiet_NaN();  // Latitude in degrees (WGS84)
     double longitude = std::numeric_limits<double>::quiet_NaN(); // Longitude in degrees (WGS84)
     double altitude = std::numeric_limits<double>::quiet_NaN();  // Altitude in meters (MSL)
@@ -140,7 +141,7 @@ struct OgnMessage
 
     double course = {};         // course in degrees
     double speed = {};          // speed in knots
-    std::string_view aircraftID;     // aircraft ID, e.g. "id0ADDE626"
+    std::string_view aircraftID;     // aircraft ID in format idXXYYYYYY: XX encodes stealth/no-track/aircraftType/addressType; YYYYYY is the address
     double verticalSpeed = {};  // in m/s
     std::string_view rotationRate;   // like "+0.0rot"
     std::string_view signalStrength; // like "5.5dB"
@@ -168,7 +169,7 @@ struct OgnMessage
         sentence.clear();
         type = OgnMessageType::UNKNOWN;
         sourceId = std::string_view();       
-        timestamp = std::string_view();      
+        timestamp = std::chrono::system_clock::time_point{};
         latitude = std::numeric_limits<double>::quiet_NaN();
         longitude = std::numeric_limits<double>::quiet_NaN();
         altitude = std::numeric_limits<double>::quiet_NaN();

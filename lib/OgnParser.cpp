@@ -352,8 +352,31 @@ void OgnParser::parseTrafficReport(OgnMessage& ognMessage, const std::string_vie
         return;
     }
 
-    // Parse timestamp
-    ognMessage.timestamp = aprsPart.substr(1, 6);
+    // Parse timestamp (hhmmss) into a UTC time_point
+    {
+        std::string_view const tsStr = aprsPart.substr(1, 6);
+        int h = 0, m = 0, s = 0;
+        std::from_chars(tsStr.data(),     tsStr.data() + 2, h);
+        std::from_chars(tsStr.data() + 2, tsStr.data() + 4, m);
+        std::from_chars(tsStr.data() + 4, tsStr.data() + 6, s);
+
+        // Compute start of current UTC day without heap allocation or gmtime
+        auto const now = std::chrono::system_clock::now();
+        auto const now_s = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+        auto const day_start = std::chrono::system_clock::time_point(
+            std::chrono::seconds(now_s - (now_s % 86400)));
+
+        auto tp = day_start
+            + std::chrono::hours(h)
+            + std::chrono::minutes(m)
+            + std::chrono::seconds(s);
+
+        // Handle day-boundary: if more than 12 hours in the future, it belongs to yesterday
+        if (tp > now + std::chrono::hours(12)) {
+            tp -= std::chrono::hours(24);
+        }
+        ognMessage.timestamp = tp;
+    }
 
     // Parse coordinates
     {
