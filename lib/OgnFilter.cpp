@@ -84,6 +84,9 @@ bool OgnFilter::filter(OgnMessage& msg)
     if (msg.aircraftID.empty()) {
         return false;
     }
+    if (msg.timestamp == std::chrono::system_clock::time_point{}) {
+        return false;
+    }
 
     // Heterogeneous lookup: find() accepts string_view without allocating a temporary string.
     const auto& cache_data = m_cache.data();

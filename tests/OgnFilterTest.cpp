@@ -28,6 +28,7 @@ bool testFilterBasic_rejectOldData();
 bool testFilterBasic_rejectEqualTimestamp();
 bool testFilterBasic_ignoresNonTrafficReport();
 bool testFilterBasic_ignoresEmptyAircraftID();
+bool testFilterBasic_rejectEpochTimestamp();
 bool testFilterEnrichment_applyKnownAircraftType();
 bool testFilterEnrichment_preserveUnknownType();
 
@@ -52,6 +53,7 @@ const Test tests[] = {
     {"testFilterBasic_rejectEqualTimestamp", testFilterBasic_rejectEqualTimestamp},
     {"testFilterBasic_ignoresNonTrafficReport", testFilterBasic_ignoresNonTrafficReport},
     {"testFilterBasic_ignoresEmptyAircraftID", testFilterBasic_ignoresEmptyAircraftID},
+    {"testFilterBasic_rejectEpochTimestamp", testFilterBasic_rejectEpochTimestamp},
     {"testFilterEnrichment_applyKnownAircraftType", testFilterEnrichment_applyKnownAircraftType},
     {"testFilterEnrichment_preserveUnknownType", testFilterEnrichment_preserveUnknownType},
 };
@@ -377,6 +379,21 @@ bool testFilterBasic_ignoresEmptyAircraftID() {
     msg.type = OgnMessageType::TRAFFIC_REPORT;
     msg.aircraftID = "";
     msg.timestamp = std::chrono::system_clock::now();
+
+    bool result = filter.filter(msg);
+    ASSERT_FALSE(result);
+    ASSERT_EQ(filter.cache().data().size(), size_t(0));
+
+    return true;
+}
+
+// Filter returns false for messages with epoch (invalid) timestamp
+bool testFilterBasic_rejectEpochTimestamp() {
+    OgnFilter filter;
+    OgnMessage msg;
+    msg.type = OgnMessageType::TRAFFIC_REPORT;
+    msg.aircraftID = "id0ADDE626";
+    msg.timestamp = std::chrono::system_clock::time_point{}; // epoch = invalid
 
     bool result = filter.filter(msg);
     ASSERT_FALSE(result);
